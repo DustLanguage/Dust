@@ -19,16 +19,30 @@ namespace Dust.Syntax
     public List<Token> Lex()
     {
       List<Token> tokens = new List<Token>();
-      
-      char? character;
 
-      while ((character = source.Advance()) != null)
+      char? character = source.Text[0];
+
+      while (true)
       {
-        Token token = LexCharacter(character.Value);
-
-        if (token != null)
+        if (source.Position + 1 <= source.Text.Length)
         {
-          tokens.Add(token);
+          Token token = LexCharacter(character.Value);
+
+          character = source.Advance();
+
+          if (token != null)
+          {
+            tokens.Add(token);
+          }
+          
+          if (character == null)
+          {
+            break;
+          }
+        }
+        else
+        {
+          break;
         }
       }
 
@@ -54,11 +68,15 @@ namespace Dust.Syntax
         case '+':
           if (source.Peek() == '=')
           {
+            source.Advance();
+
             return new Token(TokenKind.PlusEquals);
           }
 
           if (source.Peek() == '+')
           {
+            source.Advance();
+
             return new Token(TokenKind.PlusPlus);
           }
 
@@ -66,11 +84,16 @@ namespace Dust.Syntax
         case '-':
           if (source.Peek() == '=')
           {
+            source.Advance();
+
             return new Token(TokenKind.MinusEquals);
           }
 
           if (source.Peek() == '-')
           {
+            source.Advance();
+
+
             return new Token(TokenKind.MinusMinus);
           }
 
@@ -78,11 +101,15 @@ namespace Dust.Syntax
         case '*':
           if (source.Peek() == '=')
           {
+            source.Advance();
+
             return new Token(TokenKind.AsteriskEquals);
           }
 
           if (source.Peek() == '*')
           {
+            source.Advance();
+
             return new Token(TokenKind.AsteriskAsterisk);
           }
 
@@ -90,11 +117,15 @@ namespace Dust.Syntax
         case '/':
           if (source.Peek() == '=')
           {
+            source.Advance();
+
             return new Token(TokenKind.SlashEquals);
           }
 
           if (source.Peek() == '/')
           {
+            source.Advance();
+
             return new Token(TokenKind.SlashSlash);
           }
 
@@ -117,8 +148,8 @@ namespace Dust.Syntax
 
     private Token LexNumbericLiteral()
     {
-      int startPosition = source.Position - 1;
-      char? character = source.Advance();
+      int startPosition = source.Position;
+      char? character = source.Peek();
 
       bool dotFound = false;
       bool invalidDot = false;
@@ -137,8 +168,6 @@ namespace Dust.Syntax
 
         character = source.Advance();
       }
-      
-      source.Revert();
 
       if (invalidDot)
       {
@@ -147,31 +176,37 @@ namespace Dust.Syntax
         return null;
       }
 
-      character = source.PeekBack();
-
-      if ((char.IsDigit(character.Value) || character.Value == '.') == false)
-      {
-        source.Revert();
-      }
-
       return new Token(TokenKind.NumericLiteral)
       {
-        Text = source.Text.SubstringRange(startPosition, source.Position)
+        Text = source.Text.SubstringRange(startPosition, startPosition == source.Position ? source.Position + 1 : source.Position)
       };
     }
 
 
     private Token LexIdentifierOrKeyword()
     {
-      int startPosition = source.Position - 1;
-      char? character = source.Advance();
+      int startPosition = source.Position;
+      char? character = source.Peek();
 
-      while (character != null && IsValidIdentiferOrKeywordCharacter(character.Value))
+      bool invalidSymbol = false;
+
+      while (true)
       {
-        character = source.Advance();
+        if (character != null && IsValidIdentiferOrKeywordCharacter(character.Value))
+        {
+          character = source.Advance();
+        }
+        else if (character == ' ' || character == null)
+        {
+          break;
+        }
+        else if (IsValidIdentiferOrKeywordCharacter(character.Value) == false)
+        {
+          invalidSymbol = true;
+        }
       }
 
-      if (character != null && IsValidIdentiferOrKeywordCharacter(character.Value) == false)
+      if (invalidSymbol)
       {
         Console.WriteLine("Invalid symbol in identifier.");
 
@@ -180,7 +215,7 @@ namespace Dust.Syntax
 
       return new Token(TokenKind.Identifier)
       {
-        Text = source.Text.SubstringRange(startPosition, source.Position - 1)
+        Text = source.Text.SubstringRange(startPosition, startPosition == source.Position ? source.Position + 1 : source.Position)
       };
     }
 

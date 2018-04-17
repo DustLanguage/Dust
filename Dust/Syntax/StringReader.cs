@@ -17,7 +17,7 @@ namespace Dust.Syntax
 
     public char? Peek()
     {
-      if (Position + 1 > Text.Length - 1)
+      if (Position + 1 >= Text.Length)
       {
         return null;
       }
@@ -39,7 +39,7 @@ namespace Dust.Syntax
         return null;
       }
 
-      return Text[Position - 1];
+      return Text[Position];
     }
 
     public void Revert()
@@ -54,7 +54,7 @@ namespace Dust.Syntax
 
     public bool IsAtEnd()
     {
-      return Position > Text.Length;
+      return Position >= Text.Length;
     }
 
     public void Dispose()
