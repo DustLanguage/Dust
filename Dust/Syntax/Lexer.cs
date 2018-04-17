@@ -232,12 +232,49 @@ namespace Dust.Syntax
         Text = source.GetText()
       };
     }
+    
+    private Token LexString()
+    {
+      char? character = source.Peek();
+
+      bool unterminated = false;
+      
+      source.Start(source.Position + 1);
+      
+      while (character != null && IsStringTerminator(character.Value) == false)
+      {
+        if (source.IsAtEnd())
+        {
+          unterminated = true;
+          
+          break;
+        }
+        
+        character = source.Advance();
+      }
+
+      if (unterminated)
+      {
+        // Syntax error
+        Console.WriteLine("unterminated string");
+
+        return null;
+      }
+      
+      return new Token(TokenKind.StringLiteral)
+      {
+        Text = source.GetText()
       };
     }
 
     private static bool IsValidIdentiferOrKeywordCharacter(char character)
     {
       return char.IsLetterOrDigit(character) || character == '_';
+    }
+
+    private static bool IsStringTerminator(char character)
+    {
+      return character == '\'' || character == '"';
     }
 
     public void Dispose()

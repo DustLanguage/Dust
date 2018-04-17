@@ -21,6 +21,7 @@
     SlashEquals,
     SlashSlash,
     NumericLiteral,
+    StringLiteral,
     Identifier
   }
 }
