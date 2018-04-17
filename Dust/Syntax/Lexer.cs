@@ -18,6 +18,11 @@ namespace Dust.Syntax
 
     public List<Token> Lex()
     {
+      if (string.IsNullOrWhiteSpace(source.Text))
+      {
+        return new List<Token>();
+      }
+      
       List<Token> tokens = new List<Token>();
 
       char? character = source.Text[0];
@@ -34,7 +39,7 @@ namespace Dust.Syntax
           {
             tokens.Add(token);
           }
-          
+
           if (character == null)
           {
             break;
@@ -130,10 +135,13 @@ namespace Dust.Syntax
           }
 
           return new Token(TokenKind.Slash);
+        case '"':
+        case '\'':
+          return LexString();
         default:
           if (char.IsDigit(character))
           {
-            return LexNumbericLiteral();
+            return LexNumericLiteral();
           }
 
           if (char.IsLetter(character) || character == '_')
@@ -145,15 +153,15 @@ namespace Dust.Syntax
       }
     }
 
-
-    private Token LexNumbericLiteral()
+    private Token LexNumericLiteral()
     {
-      int startPosition = source.Position;
       char? character = source.Peek();
 
       bool dotFound = false;
       bool invalidDot = false;
 
+      source.Start();
+      
       while (character != null && (char.IsDigit(character.Value) || character.Value == '.'))
       {
         if (character.Value == '.')
@@ -171,25 +179,30 @@ namespace Dust.Syntax
 
       if (invalidDot)
       {
-        source.Revert();
+        // This might need to be here
+        // source.Revert();
 
+        // Syntax error
+        Console.WriteLine("invalid dot");
+        
         return null;
       }
 
       return new Token(TokenKind.NumericLiteral)
       {
-        Text = source.Text.SubstringRange(startPosition, startPosition == source.Position ? source.Position + 1 : source.Position)
+        Text = source.GetText()
       };
     }
 
 
     private Token LexIdentifierOrKeyword()
     {
-      int startPosition = source.Position;
       char? character = source.Peek();
 
       bool invalidSymbol = false;
 
+      source.Start();
+      
       while (true)
       {
         if (character != null && IsValidIdentiferOrKeywordCharacter(character.Value))
@@ -208,6 +221,7 @@ namespace Dust.Syntax
 
       if (invalidSymbol)
       {
+        // Syntax error
         Console.WriteLine("Invalid symbol in identifier.");
 
         return null;
@@ -215,7 +229,9 @@ namespace Dust.Syntax
 
       return new Token(TokenKind.Identifier)
       {
-        Text = source.Text.SubstringRange(startPosition, startPosition == source.Position ? source.Position + 1 : source.Position)
+        Text = source.GetText()
+      };
+    }
       };
     }
 

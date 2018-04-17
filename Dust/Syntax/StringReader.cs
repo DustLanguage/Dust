@@ -1,4 +1,5 @@
 ﻿using System;
+using Dust.Extensions;
 
 namespace Dust.Syntax
 {
@@ -42,14 +43,24 @@ namespace Dust.Syntax
       return Text[Position];
     }
 
+    public void Start()
+    {
+      Start(Position);
+    }
+    
+    public void Start(int position)
+    {
+      startPosition = position;
+    }
+
+    public string GetText()
+    {
+      return Text.SubstringRange(startPosition, startPosition == Position ? Position + 1 : Position);
+    }
+
     public void Revert()
     {
       Position--;
-    }
-    
-    public void StartLexeme()
-    {
-      startPosition = Position;
     }
 
     public bool IsAtEnd()
