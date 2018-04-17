@@ -2,6 +2,7 @@
 {
   public enum TokenKind
   {
+    // Simple tokens
     OpenParentheses,
     CloseParentheses,
     OpenBrace,
@@ -20,8 +21,21 @@
     Slash,
     SlashEquals,
     SlashSlash,
+    // Literals
     NumericLiteral,
     StringLiteral,
-    Identifier
+    Identifier,
+    // Keywords
+    LetKeyword,
+    FnKeyword,
+    MutKeyword,
+    ReturnKeyword,
+    TypeOfKeyword,
+    TrueKeyword,
+    FalseKeyword,
+    IfKeyword,
+    ElseKeyword,
+    ElifKeyword,
+    NullKeyword
   }
 }

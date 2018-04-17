@@ -22,7 +22,7 @@ namespace Dust.Syntax
       {
         return new List<Token>();
       }
-      
+
       List<Token> tokens = new List<Token>();
 
       char? character = source.Text[0];
@@ -161,7 +161,7 @@ namespace Dust.Syntax
       bool invalidDot = false;
 
       source.Start();
-      
+
       while (character != null && (char.IsDigit(character.Value) || character.Value == '.'))
       {
         if (character.Value == '.')
@@ -202,7 +202,7 @@ namespace Dust.Syntax
       bool invalidSymbol = false;
 
       source.Start();
-      
+
       while (true)
       {
         if (character != null && IsValidIdentiferOrKeywordCharacter(character.Value))
@@ -226,30 +226,32 @@ namespace Dust.Syntax
 
         return null;
       }
+      
+      TokenKind? keywordKind = LexKeyword(source.GetText());
 
-      return new Token(TokenKind.Identifier)
+      return new Token(keywordKind ?? TokenKind.Identifier)
       {
         Text = source.GetText()
       };
     }
-    
+
     private Token LexString()
     {
       char? character = source.Peek();
 
       bool unterminated = false;
-      
+
       source.Start(source.Position + 1);
-      
+
       while (character != null && IsStringTerminator(character.Value) == false)
       {
         if (source.IsAtEnd())
         {
           unterminated = true;
-          
+
           break;
         }
-        
+
         character = source.Advance();
       }
 
@@ -260,11 +262,42 @@ namespace Dust.Syntax
 
         return null;
       }
-      
+
       return new Token(TokenKind.StringLiteral)
       {
         Text = source.GetText()
       };
+    }
+
+    private TokenKind? LexKeyword(string text)
+    {
+      switch (text)
+      {
+        case "let":
+          return TokenKind.LetKeyword;
+        case "fn":
+          return TokenKind.FnKeyword;
+        case "mut":
+          return TokenKind.MutKeyword;
+        case "return":
+          return TokenKind.ReturnKeyword;
+        case "typeof":
+          return TokenKind.TypeOfKeyword;
+        case "true":
+          return TokenKind.TrueKeyword;
+        case "false":
+          return TokenKind.FalseKeyword;
+        case "if":
+          return TokenKind.IfKeyword;
+        case "else":
+          return TokenKind.ElseKeyword;
+        case "elif":
+          return TokenKind.ElifKeyword;
+        case "null":
+          return TokenKind.NullKeyword;
+        default:
+          return null;
+      }
     }
 
     private static bool IsValidIdentiferOrKeywordCharacter(char character)
