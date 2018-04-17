@@ -10,7 +10,19 @@ namespace Dust.CLI
   {
     public static void Main(string[] args)
     {
-      new Lexer(Console.ReadLine()).Lex();
+      string input;
+      
+      while (true)
+      {
+        input = Console.ReadLine();
+        
+        if (input == "exit")
+        {
+          return;
+        }
+        
+        new Lexer(input).Lex();        
+      }
     }
   }
 }
