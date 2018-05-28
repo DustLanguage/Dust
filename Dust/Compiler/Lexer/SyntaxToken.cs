@@ -5,9 +5,5 @@
     public SyntaxTokenKind Kind { get; set; }
     public string Text { get; set; }
     public SourcePosition Position { get; set; }
-
-    public SyntaxToken()
-    {
-    }
   }
 }

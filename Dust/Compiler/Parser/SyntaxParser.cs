@@ -59,9 +59,7 @@ namespace Dust.Compiler.Parser
 
     private bool IsFunctionStartToken()
     {
-      bool advance = false;
-
-      return MatchToken(SyntaxTokenKind.PublicKeyword, advance) || MatchToken(SyntaxTokenKind.InternalKeyword, advance) || MatchToken(SyntaxTokenKind.ProtectedKeyword, advance) || MatchToken(SyntaxTokenKind.PrivateKeyword, advance) || MatchToken(SyntaxTokenKind.StaticKeyword, advance);
+      return MatchToken(SyntaxTokenKind.PublicKeyword, false) || MatchToken(SyntaxTokenKind.InternalKeyword, false) || MatchToken(SyntaxTokenKind.ProtectedKeyword, false) || MatchToken(SyntaxTokenKind.PrivateKeyword, false) || MatchToken(SyntaxTokenKind.StaticKeyword, false);
     }
 
     private Node ParseFn()
