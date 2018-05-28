@@ -1,7 +1,7 @@
 ﻿using System;
 using Dust.Extensions;
 
-namespace Dust.Syntax
+namespace Dust.Compiler.Lexer
 {
   public class StringReader : IDisposable
   {

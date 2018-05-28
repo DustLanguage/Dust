@@ -1,6 +1,6 @@
-﻿namespace Dust.Syntax
+﻿namespace Dust.Compiler.Lexer
 {
-  public enum TokenKind
+  public enum SyntaxTokenKind
   {
     // Simple tokens
     OpenParentheses,
@@ -21,6 +21,7 @@
     Slash,
     SlashEquals,
     SlashSlash,
+    EndOfFile,
     // Literals
     NumericLiteral,
     StringLiteral,
@@ -36,6 +37,11 @@
     IfKeyword,
     ElseKeyword,
     ElifKeyword,
-    NullKeyword
+    NullKeyword,
+    PublicKeyword,
+    InternalKeyword,
+    ProtectedKeyword,
+    PrivateKeyword,
+    StaticKeyword
   }
 }

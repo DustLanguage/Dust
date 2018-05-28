@@ -1,29 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Dust.Extensions;
 
-namespace Dust.Syntax
+namespace Dust.Compiler.Lexer
 {
-  public class Lexer : IDisposable
+  public class SyntaxLexer : IDisposable
   {
     private readonly StringReader source;
 
-    public Lexer(string text)
+    public SyntaxLexer(string text)
     {
       Debug.Assert(text != null, "Text is null.");
 
       source = new StringReader(text);
     }
 
-    public List<Token> Lex()
+    public List<SyntaxToken> Lex()
     {
       if (string.IsNullOrWhiteSpace(source.Text))
       {
-        return new List<Token>();
+        return new List<SyntaxToken>();
       }
 
-      List<Token> tokens = new List<Token>();
+      List<SyntaxToken> tokens = new List<SyntaxToken>();
 
       char? character = source.Text[0];
 
@@ -31,13 +32,13 @@ namespace Dust.Syntax
       {
         if (source.Position + 1 <= source.Text.Length)
         {
-          Token token = LexCharacter(character.Value);
+          SyntaxToken syntaxToken = LexCharacter(character.Value);
 
           character = source.Advance();
 
-          if (token != null)
+          if (syntaxToken != null)
           {
-            tokens.Add(token);
+            tokens.Add(syntaxToken);
           }
 
           if (character == null)
@@ -51,90 +52,136 @@ namespace Dust.Syntax
         }
       }
 
+      tokens.Add(new SyntaxToken()
+      {
+        Kind = SyntaxTokenKind.EndOfFile,
+        Position = GetSourcePosition(source.Text.Length - 1)
+      });
+
       return tokens;
     }
 
-    private Token LexCharacter(char character)
+    private SyntaxToken LexCharacter(char character)
     {
+      SyntaxToken token = new SyntaxToken
+      {
+        Position = GetSourcePosition(source.Position)
+      };
+
       switch (character)
       {
         case '(':
-          return new Token(TokenKind.OpenParentheses);
+          token.Kind = SyntaxTokenKind.OpenParentheses;
+
+          break;
         case ')':
-          return new Token(TokenKind.CloseParentheses);
+          token.Kind = SyntaxTokenKind.CloseParentheses;
+
+          break;
         case '{':
-          return new Token(TokenKind.OpenBrace);
+          token.Kind = SyntaxTokenKind.OpenBrace;
+
+          break;
         case '}':
-          return new Token(TokenKind.CloseBrace);
+          token.Kind = SyntaxTokenKind.CloseBrace;
+
+          break;
         case '[':
-          return new Token(TokenKind.OpenBracket);
+          token.Kind = SyntaxTokenKind.OpenBracket;
+
+          break;
         case ']':
-          return new Token(TokenKind.CloseBracket);
+          token.Kind = SyntaxTokenKind.CloseBracket;
+
+          break;
         case '+':
           if (source.Peek() == '=')
           {
             source.Advance();
 
-            return new Token(TokenKind.PlusEquals);
+            token.Kind = SyntaxTokenKind.PlusEquals;
+
+            break;
           }
 
           if (source.Peek() == '+')
           {
             source.Advance();
 
-            return new Token(TokenKind.PlusPlus);
+            token.Kind = SyntaxTokenKind.PlusPlus;
+
+            break;
           }
 
-          return new Token(TokenKind.Plus);
+          token.Kind = SyntaxTokenKind.Plus;
+
+          break;
         case '-':
           if (source.Peek() == '=')
           {
             source.Advance();
 
-            return new Token(TokenKind.MinusEquals);
+            token.Kind = SyntaxTokenKind.MinusEquals;
+
+            break;
           }
 
           if (source.Peek() == '-')
           {
             source.Advance();
 
+            token.Kind = SyntaxTokenKind.MinusMinus;
 
-            return new Token(TokenKind.MinusMinus);
+            break;
           }
 
-          return new Token(TokenKind.Minus);
+          token.Kind = SyntaxTokenKind.Minus;
+
+          break;
         case '*':
           if (source.Peek() == '=')
           {
             source.Advance();
 
-            return new Token(TokenKind.AsteriskEquals);
+            token.Kind = SyntaxTokenKind.AsteriskEquals;
+
+            break;
           }
 
           if (source.Peek() == '*')
           {
             source.Advance();
 
-            return new Token(TokenKind.AsteriskAsterisk);
+            token.Kind = SyntaxTokenKind.AsteriskAsterisk;
+
+            break;
           }
 
-          return new Token(TokenKind.Asterisk);
+          token.Kind = SyntaxTokenKind.Asterisk;
+
+          break;
         case '/':
           if (source.Peek() == '=')
           {
             source.Advance();
 
-            return new Token(TokenKind.SlashEquals);
+            token.Kind = SyntaxTokenKind.SlashEquals;
+
+            break;
           }
 
           if (source.Peek() == '/')
           {
             source.Advance();
 
-            return new Token(TokenKind.SlashSlash);
+            token.Kind = SyntaxTokenKind.SlashSlash;
+
+            break;
           }
 
-          return new Token(TokenKind.Slash);
+          token.Kind = SyntaxTokenKind.Slash;
+
+          break;
         case '"':
         case '\'':
           return LexString();
@@ -151,11 +198,17 @@ namespace Dust.Syntax
 
           return null;
       }
+
+      token.Position = null;
+
+      return token;
     }
 
-    private Token LexNumericLiteral()
+    private SyntaxToken LexNumericLiteral()
     {
       char? character = source.Peek();
+
+      SourcePosition position = GetSourcePosition(source.Position);
 
       bool dotFound = false;
       bool invalidDot = false;
@@ -184,20 +237,24 @@ namespace Dust.Syntax
 
         // Syntax error
         Console.WriteLine("invalid dot");
-        
+
         return null;
       }
 
-      return new Token(TokenKind.NumericLiteral)
+      return new SyntaxToken
       {
+        Kind = SyntaxTokenKind.NumericLiteral,
+        Position = position,
         Text = source.GetText()
       };
     }
 
 
-    private Token LexIdentifierOrKeyword()
+    private SyntaxToken LexIdentifierOrKeyword()
     {
       char? character = source.Peek();
+
+      SourcePosition position = GetSourcePosition(source.Position);
 
       bool invalidSymbol = false;
 
@@ -209,7 +266,7 @@ namespace Dust.Syntax
         {
           character = source.Advance();
         }
-        else if (character == ' ' || character == null)
+        else if (character == ' ' || character == null || IsValidIdentiferOrKeywordCharacter(character.Value) == false)
         {
           break;
         }
@@ -226,20 +283,23 @@ namespace Dust.Syntax
 
         return null;
       }
-      
-      TokenKind? keywordKind = LexKeyword(source.GetText());
 
-      return new Token(keywordKind ?? TokenKind.Identifier)
+      SyntaxTokenKind? keywordKind = LexKeyword(source.GetText());
+
+      return new SyntaxToken
       {
+        Kind = keywordKind ?? SyntaxTokenKind.Identifier,
+        Position = position,
         Text = source.GetText()
       };
     }
 
-    private Token LexString()
+    private SyntaxToken LexString()
     {
       char? character = source.Peek();
-
       bool unterminated = false;
+
+      SourcePosition position = GetSourcePosition(source.Position - 1);
 
       source.Start(source.Position + 1);
 
@@ -263,38 +323,40 @@ namespace Dust.Syntax
         return null;
       }
 
-      return new Token(TokenKind.StringLiteral)
+      return new SyntaxToken
       {
+        Kind = SyntaxTokenKind.StringLiteral,
+        Position = position,
         Text = source.GetText()
       };
     }
 
-    private TokenKind? LexKeyword(string text)
+    private static SyntaxTokenKind? LexKeyword(string text)
     {
       switch (text)
       {
         case "let":
-          return TokenKind.LetKeyword;
+          return SyntaxTokenKind.LetKeyword;
         case "fn":
-          return TokenKind.FnKeyword;
+          return SyntaxTokenKind.FnKeyword;
         case "mut":
-          return TokenKind.MutKeyword;
+          return SyntaxTokenKind.MutKeyword;
         case "return":
-          return TokenKind.ReturnKeyword;
+          return SyntaxTokenKind.ReturnKeyword;
         case "typeof":
-          return TokenKind.TypeOfKeyword;
+          return SyntaxTokenKind.TypeOfKeyword;
         case "true":
-          return TokenKind.TrueKeyword;
+          return SyntaxTokenKind.TrueKeyword;
         case "false":
-          return TokenKind.FalseKeyword;
+          return SyntaxTokenKind.FalseKeyword;
         case "if":
-          return TokenKind.IfKeyword;
+          return SyntaxTokenKind.IfKeyword;
         case "else":
-          return TokenKind.ElseKeyword;
+          return SyntaxTokenKind.ElseKeyword;
         case "elif":
-          return TokenKind.ElifKeyword;
+          return SyntaxTokenKind.ElifKeyword;
         case "null":
-          return TokenKind.NullKeyword;
+          return SyntaxTokenKind.NullKeyword;
         default:
           return null;
       }
@@ -303,6 +365,18 @@ namespace Dust.Syntax
     private static bool IsValidIdentiferOrKeywordCharacter(char character)
     {
       return char.IsLetterOrDigit(character) || character == '_';
+    }
+
+    private SourcePosition GetSourcePosition(int position)
+    {
+      Debug.Assert(position < source.Text.Length);
+
+      string text = source.Text.SubstringRange(0, position);
+
+      int line = text.Count(character => character == '\n');
+      int column = Math.Max(position - (text.LastIndexOf('\n') == -1 ? 0 : text.LastIndexOf('\n') + 2), 0);
+
+      return new SourcePosition(line, column);
     }
 
     private static bool IsStringTerminator(char character)
