@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
-using Dust.Syntax;
-using LLVMSharp;
+using Dust.Compiler.Lexer;
+using Dust.Compiler.Parser;
 
 namespace Dust.CLI
 {
@@ -21,7 +19,7 @@ namespace Dust.CLI
           return;
         }
         
-        new Lexer(input).Lex();        
+        new SyntaxParser(new SyntaxLexer(input).Lex()).Parse();        
       }
     }
   }
