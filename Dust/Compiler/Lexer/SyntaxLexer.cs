@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using Dust.Extensions;
@@ -286,11 +287,15 @@ namespace Dust.Compiler.Lexer
 
       SyntaxTokenKind? keywordKind = LexKeyword(source.GetText());
 
+      string text = source.GetText();
+
+      source.Revert();
+
       return new SyntaxToken
       {
         Kind = keywordKind ?? SyntaxTokenKind.Identifier,
         Position = position,
-        Text = source.GetText()
+        Text = text
       };
     }
 
@@ -357,6 +362,14 @@ namespace Dust.Compiler.Lexer
           return SyntaxTokenKind.ElifKeyword;
         case "null":
           return SyntaxTokenKind.NullKeyword;
+        case "public":
+          return SyntaxTokenKind.PublicKeyword;
+        case "internal":
+          return SyntaxTokenKind.InternalKeyword;
+        case "protected":
+          return SyntaxTokenKind.ProtectedKeyword;
+        case "private":
+          return SyntaxTokenKind.PrivateKeyword;
         default:
           return null;
       }

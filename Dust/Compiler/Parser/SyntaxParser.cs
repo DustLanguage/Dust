@@ -44,7 +44,7 @@ namespace Dust.Compiler.Parser
 
     private Node ParseStatement()
     {
-      if (MatchNextToken(SyntaxTokenKind.FnKeyword))
+      if (MatchNextToken(SyntaxTokenKind.FnKeyword) || IsFunctionStartToken())
       {
         return ParseFn();
       }
@@ -57,9 +57,28 @@ namespace Dust.Compiler.Parser
       return null;
     }
 
+    private bool IsFunctionStartToken()
+    {
+      bool advance = false;
+
+      return MatchToken(SyntaxTokenKind.PublicKeyword, advance) || MatchToken(SyntaxTokenKind.InternalKeyword, advance) || MatchToken(SyntaxTokenKind.ProtectedKeyword, advance) || MatchToken(SyntaxTokenKind.PrivateKeyword, advance) || MatchToken(SyntaxTokenKind.StaticKeyword, advance);
+    }
+
     private Node ParseFn()
     {
-      if (PeekBack().Kind != SyntaxTokenKind.LetKeyword)
+      if (IsFunctionStartToken() == false && PeekBack().Kind != SyntaxTokenKind.LetKeyword)
+      {
+        // Syntax error
+
+        Console.WriteLine("error");
+      }
+
+      if (IsFunctionStartToken())
+      {
+        Advance();
+      }
+
+      if (MatchToken(SyntaxTokenKind.LetKeyword, false) == false)
       {
         // Syntax error
 
@@ -70,9 +89,10 @@ namespace Dust.Compiler.Parser
 
       List<FunctionModifier> modifiers = new List<FunctionModifier>();
 
-      while (true)
+      for (int i = tokens.IndexOf(PeekBack()); i >= 0; i--)
       {
-        FunctionModifier modifier = FunctionModifier.Parse(CurrentToken.Kind);
+        // What if we have more modifiers? I think this is actually going to work but need to try it out.
+        FunctionModifier modifier = FunctionModifier.Parse(tokens[i].Kind);
 
         if (modifier == null)
         {
@@ -83,6 +103,11 @@ namespace Dust.Compiler.Parser
       }
 
       Advance();
+
+      if (MatchToken(SyntaxTokenKind.FnKeyword) == false)
+      {
+        Console.WriteLine("error");
+      }
 
       if (MatchToken(SyntaxTokenKind.Identifier, false) == false)
       {
