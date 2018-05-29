@@ -49,7 +49,7 @@ namespace Dust.Compiler.Parser
 
     private Node ParseStatement()
     {
-      if (MatchNextToken(SyntaxTokenKind.FnKeyword) || IsFunctionStartToken())
+      if (MatchNextToken(SyntaxTokenKind.FnKeyword, false) || IsFunctionStartToken())
       {
         return ParseFn();
       }
@@ -62,50 +62,49 @@ namespace Dust.Compiler.Parser
       return null;
     }
 
-    private bool IsFunctionStartToken()
+    private bool IsFunctionStartToken(SyntaxToken token = null)
     {
-      return MatchToken(SyntaxTokenKind.PublicKeyword, false) || MatchToken(SyntaxTokenKind.InternalKeyword, false) || MatchToken(SyntaxTokenKind.ProtectedKeyword, false) || MatchToken(SyntaxTokenKind.PrivateKeyword, false) || MatchToken(SyntaxTokenKind.StaticKeyword, false);
+      SyntaxTokenKind kind = token?.Kind ?? CurrentToken.Kind;
+
+      return kind == SyntaxTokenKind.PublicKeyword || kind == SyntaxTokenKind.InternalKeyword || kind == SyntaxTokenKind.ProtectedKeyword || kind == SyntaxTokenKind.PrivateKeyword || kind == SyntaxTokenKind.StaticKeyword;
     }
 
     private Node ParseFn()
     {
-      if (IsFunctionStartToken() == false && PeekBack().Kind != SyntaxTokenKind.LetKeyword)
+      SourcePosition position = CurrentToken.Position;
+
+      if (IsFunctionStartToken() == false && CurrentToken.Kind != SyntaxTokenKind.LetKeyword)
       {
         // Syntax error
 
         Console.WriteLine("error");
       }
 
-      if (IsFunctionStartToken())
+      while (IsFunctionStartToken())
       {
         Advance();
       }
 
-      if (MatchToken(SyntaxTokenKind.LetKeyword, false) == false)
-      {
-        // Syntax error
-
-        Console.WriteLine("error");
-      }
-
-      SourcePosition position = PeekBack().Position;
-
       List<FunctionModifier> modifiers = new List<FunctionModifier>();
 
-      for (int i = tokens.IndexOf(PeekBack()); i >= 0; i--)
+      for (int i = tokens.IndexOf(CurrentToken); i >= 0; i--)
       {
-        // What if we have more modifiers? I think this is actually going to work but need to try it out.
         FunctionModifier modifier = FunctionModifier.Parse(tokens[i].Kind);
 
         if (modifier == null)
         {
-          break;
+          continue;
         }
 
         modifiers.Add(modifier);
       }
 
-      Advance();
+      if (MatchToken(SyntaxTokenKind.LetKeyword) == false)
+      {
+        // Syntax error
+
+        Console.WriteLine("error");
+      }
 
       if (MatchToken(SyntaxTokenKind.FnKeyword) == false)
       {
@@ -171,7 +170,14 @@ namespace Dust.Compiler.Parser
           break;
         }
 
-        bodyNode.Children.Add(ParseStatement());
+        Node statement = ParseStatement();
+
+        if (statement == null)
+        {
+          break;
+        }
+
+        bodyNode.Children.Add(statement);
       }
 
       bodyNode.Range = new SourceRange(bodyStartPosition, CurrentToken.Position);
