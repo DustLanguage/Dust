@@ -26,6 +26,11 @@ namespace Dust.Compiler.Lexer
       return Text[Position + 1];
     }
 
+    public char? Current()
+    {
+      return Text[Position];
+    }
+
     public char PeekBack()
     {
       return Text[Position - 1];

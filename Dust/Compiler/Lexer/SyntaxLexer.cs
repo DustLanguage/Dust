@@ -199,7 +199,10 @@ namespace Dust.Compiler.Lexer
           return null;
       }
 
-      token.Position = null;
+      if (token.Position == null)
+      {
+        token.Position = GetSourcePosition(source.Position);
+      }
 
       return token;
     }
@@ -252,7 +255,7 @@ namespace Dust.Compiler.Lexer
 
     private SyntaxToken LexIdentifierOrKeyword()
     {
-      char? character = source.Peek();
+      char? character = source.Peek() ?? source.Current();
 
       SourcePosition position = GetSourcePosition(source.Position);
 
