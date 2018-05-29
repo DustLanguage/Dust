@@ -21,6 +21,11 @@ namespace Dust.Compiler.Parser
 
     public Node Parse()
     {
+      if (tokens.Count == 0)
+      {
+        return null;
+      }
+
       CodeBlockNode module = new CodeBlockNode();
 
       SourcePosition start = CurrentToken.Position;

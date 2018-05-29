@@ -19,12 +19,12 @@ namespace Dust.Compiler.Lexer
 
     public List<SyntaxToken> Lex()
     {
+      List<SyntaxToken> tokens = new List<SyntaxToken>();
+
       if (string.IsNullOrWhiteSpace(source.Text))
       {
-        return new List<SyntaxToken>();
+        return tokens;
       }
-
-      List<SyntaxToken> tokens = new List<SyntaxToken>();
 
       char? character = source.Text[0];
 
