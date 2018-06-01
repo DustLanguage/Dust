@@ -3,7 +3,4 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="LLVMSharp" Version="5.0.0" />
-  </ItemGroup>
 </Project>
