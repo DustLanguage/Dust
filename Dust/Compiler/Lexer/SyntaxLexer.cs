@@ -71,11 +71,11 @@ namespace Dust.Compiler.Lexer
       switch (character)
       {
         case '(':
-          token.Kind = SyntaxTokenKind.OpenParentheses;
+          token.Kind = SyntaxTokenKind.OpenParenthesis;
 
           break;
         case ')':
-          token.Kind = SyntaxTokenKind.CloseParentheses;
+          token.Kind = SyntaxTokenKind.CloseParenthesis;
 
           break;
         case '{':
@@ -255,9 +255,9 @@ namespace Dust.Compiler.Lexer
 
     private SyntaxToken LexIdentifierOrKeyword()
     {
-      char? character = source.Peek() ?? source.Current();
+      char? character = source.Current;
 
-      SourcePosition position = GetSourcePosition(source.Position);
+      SourcePosition start = GetSourcePosition(source.Position);
 
       bool invalidSymbol = false;
 
@@ -287,16 +287,17 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
-      SyntaxTokenKind? keywordKind = LexKeyword(source.GetText());
-
       string text = source.GetText();
+
+      SyntaxTokenKind? keywordKind = LexKeyword(text);
 
       source.Revert();
 
       return new SyntaxToken
       {
         Kind = keywordKind ?? SyntaxTokenKind.Identifier,
-        Position = position,
+        // +1 is needed because revert.
+        Range = new SourceRange(start, GetSourcePosition(source.Position)),
         Text = text
       };
     }
@@ -393,6 +394,7 @@ namespace Dust.Compiler.Lexer
 
       return new SourcePosition(line, column);
     }
+
 
     private static bool IsStringTerminator(char character)
     {

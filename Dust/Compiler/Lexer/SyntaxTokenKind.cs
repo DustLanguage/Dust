@@ -3,8 +3,8 @@
   public enum SyntaxTokenKind
   {
     // Simple tokens
-    OpenParentheses,
-    CloseParentheses,
+    OpenParenthesis,
+    CloseParenthesis,
     OpenBrace,
     CloseBrace,
     OpenBracket,
