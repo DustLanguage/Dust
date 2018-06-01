@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.Parser.AbstractSyntaxTree;
 
@@ -7,8 +9,9 @@ namespace Dust.Compiler.Parser
 {
   public class SyntaxParser
   {
-    private readonly List<SyntaxToken> tokens;
+    public List<Diagnostic> Diagnostics { get; } = new List<Diagnostic>();
 
+    private readonly List<SyntaxToken> tokens;
     private int position;
 
     private SyntaxToken CurrentToken => tokens[position];
@@ -47,42 +50,37 @@ namespace Dust.Compiler.Parser
       return module;
     }
 
-    private Node ParseStatement()
+    public Node ParseStatement()
     {
-      if (MatchNextToken(SyntaxTokenKind.FnKeyword, false) || IsFunctionStartToken())
-      {
-        return ParseFn();
-      }
-
       if (MatchToken(SyntaxTokenKind.LetKeyword))
       {
         return ParseLet();
       }
+      
+      if (MatchToken(SyntaxTokenKind.FnKeyword, false) || MatchNextToken(SyntaxTokenKind.FnKeyword, false) || IsFunctionStartToken())
+      {
+        return ParseFn();
+      }
+
+      
+
+      Error(Errors.UnexpectedToken, CurrentToken.Range);
 
       return null;
-    }
-
-    private bool IsFunctionStartToken(SyntaxToken token = null)
-    {
-      SyntaxTokenKind kind = token?.Kind ?? CurrentToken.Kind;
-
-      return kind == SyntaxTokenKind.PublicKeyword || kind == SyntaxTokenKind.InternalKeyword || kind == SyntaxTokenKind.ProtectedKeyword || kind == SyntaxTokenKind.PrivateKeyword || kind == SyntaxTokenKind.StaticKeyword;
     }
 
     private Node ParseFn()
     {
       SourcePosition position = CurrentToken.Position;
 
-      if (IsFunctionStartToken() == false && CurrentToken.Kind != SyntaxTokenKind.LetKeyword)
-      {
-        // Syntax error
-
-        Console.WriteLine("error");
-      }
-
       while (IsFunctionStartToken())
       {
         Advance();
+      }
+
+      if (MatchToken(SyntaxTokenKind.LetKeyword) == false)
+      {
+        Error(Errors.LetExpected, CurrentToken.Range);
       }
 
       List<FunctionModifier> modifiers = new List<FunctionModifier>();
@@ -99,30 +97,18 @@ namespace Dust.Compiler.Parser
         modifiers.Add(modifier);
       }
 
-      if (MatchToken(SyntaxTokenKind.LetKeyword) == false)
-      {
-        // Syntax error
-
-        Console.WriteLine("error");
-      }
-
-      if (MatchToken(SyntaxTokenKind.FnKeyword) == false)
-      {
-        Console.WriteLine("error");
-      }
-
       if (MatchToken(SyntaxTokenKind.Identifier, false) == false)
       {
-        Console.WriteLine("error");
+        Error(Errors.IdentifierExpected, CurrentToken.Range);
       }
 
       string name = CurrentToken.Text;
 
       Advance();
 
-      if (MatchToken(SyntaxTokenKind.OpenParentheses) == false)
+      if (MatchToken(SyntaxTokenKind.OpenParenthesis) == false)
       {
-        Console.WriteLine("error");
+        Error(Errors.OpenParenthesisExpected, CurrentToken.Range);
       }
 
       if (IsAtEnd())
@@ -136,36 +122,39 @@ namespace Dust.Compiler.Parser
 
       List<FunctionParameter> parameters = new List<FunctionParameter>();
 
-      if (MatchToken(SyntaxTokenKind.CloseParentheses) == false)
+      if (MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
       {
-        while (MatchToken(SyntaxTokenKind.CloseParentheses))
+        while (MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
         {
-          if (IsAtEnd())
-          {
-            Console.WriteLine("error");
-          }
-
           bool isMutable = MatchToken(SyntaxTokenKind.MutKeyword);
 
           if (MatchToken(SyntaxTokenKind.Identifier))
           {
             parameters.Add(new FunctionParameter(CurrentToken.Text, null, isMutable));
           }
+          else
+          {
+            Error(Errors.CloseParenthesisExpected, CurrentToken.Range);
+
+            break;
+          }
         }
       }
 
       if (MatchToken(SyntaxTokenKind.OpenBrace) == false)
       {
-        Console.WriteLine("error");
+        Error(Errors.OpenBraceExpected, new SourceRange(CurrentToken.Position, CurrentToken.Position + 1));
       }
 
       CodeBlockNode bodyNode = new CodeBlockNode();
 
-      while (MatchToken(SyntaxTokenKind.CloseBrace, false) == false)
+      SyntaxToken closeBrace = CurrentToken;
+
+      while (MatchToken(SyntaxTokenKind.CloseBrace) == false)
       {
         if (IsAtEnd())
         {
-          Console.WriteLine("error");
+          Error(Errors.CloseBraceExpected, new SourceRange(closeBrace.Position, closeBrace.Position + 1));
 
           break;
         }
@@ -205,6 +194,22 @@ namespace Dust.Compiler.Parser
       Advance();
 
       return node;
+    }
+
+    private bool IsFunctionStartToken(SyntaxToken token = null)
+    {
+      SyntaxTokenKind kind = token?.Kind ?? CurrentToken.Kind;
+
+      return kind == SyntaxTokenKind.PublicKeyword || kind == SyntaxTokenKind.InternalKeyword || kind == SyntaxTokenKind.ProtectedKeyword || kind == SyntaxTokenKind.PrivateKeyword || kind == SyntaxTokenKind.StaticKeyword;
+    }
+
+    private void Error(Diagnostic error, SourceRange range)
+    {
+      Debug.Assert(error.Severity == DiagnosticSeverity.Error);
+
+      error.Range = range;
+
+      Diagnostics.Add(error);
     }
 
     private bool MatchToken(SyntaxTokenKind kind, bool advance = true, int offset = 0)
