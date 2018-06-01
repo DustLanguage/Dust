@@ -6,6 +6,7 @@ namespace Dust.Compiler.Lexer
   public class StringReader : IDisposable
   {
     public int Position { get; private set; }
+    public char? Current => Text[Position];
     public string Text { get; }
 
     private int startPosition;
@@ -24,11 +25,6 @@ namespace Dust.Compiler.Lexer
       }
 
       return Text[Position + 1];
-    }
-
-    public char? Current()
-    {
-      return Text[Position];
     }
 
     public char PeekBack()
@@ -52,7 +48,7 @@ namespace Dust.Compiler.Lexer
     {
       Start(Position);
     }
-    
+
     public void Start(int position)
     {
       startPosition = position;
