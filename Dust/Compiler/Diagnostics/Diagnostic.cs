@@ -2,16 +2,19 @@
 {
   public class Diagnostic
   {
-    public string Code { get; }
-    public string Message { get; }
+    public string Message { get; private set; }
     public DiagnosticSeverity Severity { get; }
     public SourceRange Range { get; set; }
 
-    public Diagnostic(string code, string message, DiagnosticSeverity severity)
+    public Diagnostic(string message, DiagnosticSeverity severity)
     {
-      Code = code;
       Message = message;
       Severity = severity;
+    }
+    
+    public void Format(string arg0, string arg1)
+    {
+        Message = arg1 != null ? string.Format(Message, arg0, arg1) : string.Format(Message, arg0);
     }
   }
 }

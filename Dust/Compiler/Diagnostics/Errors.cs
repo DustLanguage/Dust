@@ -2,35 +2,20 @@
 {
   public class Errors
   {
-    public static Diagnostic OpenBraceExpected { get; }
-    public static Diagnostic CloseBraceExpected { get; }
-    public static Diagnostic OpenParenthesisExpected { get; }
-    public static Diagnostic CloseParenthesisExpected { get; }
-    public static Diagnostic LetExpected { get; }
-    public static Diagnostic FnExpected { get; }
-    public static Diagnostic IdentifierExpected { get; }
-    public static Diagnostic UnexpectedToken { get; }
-
-    private static readonly int startErrorCode = 1000;
-    private static int currentErrorCode = startErrorCode - 1;
-
-    static Errors()
-    {
-      OpenBraceExpected = CreateError("{ expected");
-      CloseBraceExpected = CreateError("} expected");
-      LetExpected = CreateError("let expected in function declaration");
-      FnExpected = CreateError("fn expected in function declaration");
-      IdentifierExpected = CreateError("identifier expected in function declaration");
-      OpenParenthesisExpected = CreateError("( expected");
-      CloseParenthesisExpected = CreateError(") expected");
-      UnexpectedToken = CreateError("unexpected token");
-    }
-
+    public static Diagnostic OpenBraceExpected => CreateError("{ expected");
+    public static Diagnostic CloseBraceExpected => CreateError("} expected");
+    public static Diagnostic OpenParenthesisExpected => CreateError("( expected");
+    public static Diagnostic CloseParenthesisExpected => CreateError(") expected");
+    public static Diagnostic LetExpected => CreateError("let expected in function declaration");
+    public static Diagnostic FnExpected => CreateError("fn expected in function declaration");
+    public static Diagnostic IdentifierExpected => CreateError("identifier expected in function declaration");
+    public static Diagnostic DuplicateModifier =>CreateError("duplicate '{0}' modifier");
+    public static Diagnostic IncombinableModifier =>CreateError("modifier '{0}' can't be combined with modifier '{1}'");
+    public static Diagnostic UnexpectedToken =>CreateError("unexpected token");
+    
     private static Diagnostic CreateError(string message)
     {
-      currentErrorCode++;
-
-      return new Diagnostic($"DS{currentErrorCode.ToString()}", message, DiagnosticSeverity.Error);
+      return new Diagnostic(message, DiagnosticSeverity.Error);
     }
   }
 }

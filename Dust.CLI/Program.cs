@@ -24,7 +24,7 @@ namespace Dust.CLI
 
         foreach (Diagnostic diagnostic in parser.Diagnostics)
         {
-          Console.WriteLine($"{diagnostic.Severity}: {diagnostic.Message} at {diagnostic.Range.Start} ({diagnostic.Code})");
+          Console.WriteLine($"{diagnostic.Severity}: {diagnostic.Message} at {diagnostic.Range.Start}");
         }
       }
     }
