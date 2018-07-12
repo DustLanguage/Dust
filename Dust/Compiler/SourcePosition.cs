@@ -79,7 +79,7 @@
     {
       unchecked
       {
-        int hashCode = (File != null ? File.GetHashCode() : 0);
+        int hashCode = File != null ? File.GetHashCode() : 0;
         hashCode = (hashCode * 397) ^ Line;
         hashCode = (hashCode * 397) ^ Column;
         return hashCode;

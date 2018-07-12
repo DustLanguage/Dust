@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.Parser.AbstractSyntaxTree;
@@ -50,19 +50,17 @@ namespace Dust.Compiler.Parser
       return module;
     }
 
-    public Node ParseStatement()
+    private Node ParseStatement()
     {
       if (MatchToken(SyntaxTokenKind.LetKeyword))
       {
         return ParseLet();
       }
-      
+
       if (MatchToken(SyntaxTokenKind.FnKeyword, false) || MatchNextToken(SyntaxTokenKind.FnKeyword, false) || IsFunctionStartToken())
       {
         return ParseFn();
       }
-
-      
 
       Error(Errors.UnexpectedToken, CurrentToken.Range);
 
@@ -83,19 +81,33 @@ namespace Dust.Compiler.Parser
         Error(Errors.LetExpected, CurrentToken.Range);
       }
 
+      if (MatchToken(SyntaxTokenKind.FnKeyword) == false)
+      {
+        Error(Errors.FnExpected, CurrentToken.Range);
+      }
+
       List<FunctionModifier> modifiers = new List<FunctionModifier>();
 
       for (int i = tokens.IndexOf(CurrentToken); i >= 0; i--)
       {
-        FunctionModifier modifier = FunctionModifier.Parse(tokens[i].Kind);
+        FunctionModifierKind? kind = FunctionModifier.ParseKind(tokens[i].Kind);
 
-        if (modifier == null)
+        if (kind == null)
         {
           continue;
         }
 
+        FunctionModifier modifier = new FunctionModifier(tokens[i], kind.Value);
+
         modifiers.Add(modifier);
       }
+
+      if (Peek().Kind == SyntaxTokenKind.Identifier)
+      {
+        ValidateFunctionModifiers(modifiers, Peek().Range);
+      }
+
+      Advance();
 
       if (MatchToken(SyntaxTokenKind.Identifier, false) == false)
       {
@@ -203,13 +215,145 @@ namespace Dust.Compiler.Parser
       return kind == SyntaxTokenKind.PublicKeyword || kind == SyntaxTokenKind.InternalKeyword || kind == SyntaxTokenKind.ProtectedKeyword || kind == SyntaxTokenKind.PrivateKeyword || kind == SyntaxTokenKind.StaticKeyword;
     }
 
-    private void Error(Diagnostic error, SourceRange range)
+    private void Error(Error error, SourceRange range, string arg0 = null, string arg1 = null)
     {
-      Debug.Assert(error.Severity == DiagnosticSeverity.Error);
-
       error.Range = range;
 
+      if (arg0 != null)
+      {
+        error.Format(arg0, arg1);
+      }
+
       Diagnostics.Add(error);
+    }
+
+    private static (int publicCount, int internalCount, int protectedCount, int privateCount, int staticCount) CountModifiers(List<FunctionModifier> modifiers)
+    {
+      return (modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Public), modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Internal), modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Protected), modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Private), modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Static));
+    }
+
+    private void ModifierError(Error error, FunctionModifier modifier, string arg0 = null, string arg1 = null)
+    {
+      Error(error, modifier.Token.Range, arg0, arg1);
+    }
+
+    private void ValidateFunctionModifiers(List<FunctionModifier> modifiers, SourceRange nameIdentifierRange)
+    {
+      if (modifiers.Count > 10)
+      {
+        Error(Errors.TooManyIncompatibleModifiers, nameIdentifierRange);
+
+        return;
+      }
+
+      (int publicCount, int internalCount, int protectedCount, int privateCount, int staticCount) = CountModifiers(modifiers);
+
+      bool containsPublic = publicCount > 0;
+      bool containsInternal = internalCount > 0;
+      bool containsProtected = protectedCount > 0;
+      bool containsPrivate = privateCount > 0;
+
+      foreach (FunctionModifier modifier in modifiers.AsEnumerable().Reverse())
+      {
+        switch (modifier.Kind)
+        {
+          case FunctionModifierKind.Public:
+            if (containsInternal)
+            {
+              ModifierError(Errors.IncombinableModifier, modifier, "public", "internal");
+            }
+
+            if (containsProtected)
+            {
+              ModifierError(Errors.IncombinableModifier, modifier, "public", "protected");
+            }
+
+            if (containsPrivate)
+            {
+              ModifierError(Errors.IncombinableModifier, modifier, "public", "private");
+            }
+
+            if (publicCount > 1)
+            {
+              ModifierError(Errors.ModifierAlreadySeen, modifier, "public");
+            }
+
+            break;
+          case FunctionModifierKind.Internal:
+            if (containsPublic)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "internal", "public");
+            }
+
+            if (containsProtected)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "internal", "protected");
+            }
+
+            if (containsPrivate)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "internal", "private");
+            }
+
+            if (internalCount > 1)
+            {
+              ModifierError(Errors.ModifierAlreadySeen, modifier, "internal");
+            }
+
+            break;
+          case FunctionModifierKind.Protected:
+            if (containsPublic)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "protected", "public");
+            }
+
+            if (containsInternal)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "protected", "internal");
+            }
+
+            if (containsPrivate)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "protected", "private");
+            }
+
+            if (protectedCount > 1)
+            {
+              ModifierError(Errors.ModifierAlreadySeen, modifier, "protected");
+            }
+
+            break;
+          case FunctionModifierKind.Private:
+            if (containsPublic)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "private", "public");
+            }
+
+            if (containsInternal)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "private", "internal");
+            }
+
+            if (containsProtected)
+            {
+              Error(Errors.IncombinableModifier, CurrentToken.Range, "private", "protected");
+            }
+
+            if (privateCount > 1)
+            {
+              ModifierError(Errors.ModifierAlreadySeen, modifier, "private");
+            }
+
+            break;
+          case FunctionModifierKind.Static:
+            if (staticCount > 1)
+            {
+              ModifierError(Errors.ModifierAlreadySeen, modifier, "static");
+            }
+
+            break;
+        }
+      }
     }
 
     private bool MatchToken(SyntaxTokenKind kind, bool advance = true, int offset = 0)

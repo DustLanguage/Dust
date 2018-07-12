@@ -4,29 +4,32 @@ namespace Dust.Compiler.Parser
 {
   public class FunctionModifier
   {
-    public static FunctionModifier Public => new FunctionModifier();
-    public static FunctionModifier Internal => new FunctionModifier();
-    public static FunctionModifier Protected => new FunctionModifier();
-    public static FunctionModifier Private => new FunctionModifier();
-    public static FunctionModifier Static => new FunctionModifier();
+    public SyntaxToken Token { get; }
+    public FunctionModifierKind Kind { get; }
 
-    public static FunctionModifier Parse(SyntaxTokenKind kind)
+    public FunctionModifier(SyntaxToken token, FunctionModifierKind kind)
+    {
+      Token = token;
+      Kind = kind;
+    }
+
+    public static FunctionModifierKind? ParseKind(SyntaxTokenKind kind)
     {
       switch (kind)
       {
         case SyntaxTokenKind.PublicKeyword:
-          return Public;
+          return FunctionModifierKind.Public;
         case SyntaxTokenKind.InternalKeyword:
-          return Internal;
+          return FunctionModifierKind.Internal;
         case SyntaxTokenKind.ProtectedKeyword:
-          return Protected;
+          return FunctionModifierKind.Protected;
         case SyntaxTokenKind.PrivateKeyword:
-          return Private;
+          return FunctionModifierKind.Private;
         case SyntaxTokenKind.StaticKeyword:
-          return Static;
-        default:
-          return null;
+          return FunctionModifierKind.Static;
       }
+
+      return null;
     }
   }
 }

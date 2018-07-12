@@ -52,7 +52,7 @@ namespace Dust.Compiler.Lexer
         }
       }
 
-      tokens.Add(new SyntaxToken()
+      tokens.Add(new SyntaxToken
       {
         Kind = SyntaxTokenKind.EndOfFile,
         Position = GetSourcePosition(source.Text.Length - 1)
@@ -373,6 +373,8 @@ namespace Dust.Compiler.Lexer
           return SyntaxTokenKind.ProtectedKeyword;
         case "private":
           return SyntaxTokenKind.PrivateKeyword;
+        case "static":
+          return SyntaxTokenKind.StaticKeyword;
         default:
           return null;
       }

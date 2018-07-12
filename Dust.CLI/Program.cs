@@ -5,9 +5,9 @@ using Dust.Compiler.Parser;
 
 namespace Dust.CLI
 {
-  public class Program
+  public static class Program
   {
-    public static void Main(string[] args)
+    public static void Main()
     {
       while (true)
       {
