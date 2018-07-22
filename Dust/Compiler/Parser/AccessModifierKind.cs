@@ -1,6 +1,6 @@
 ﻿namespace Dust.Compiler.Parser
 {
-  public enum FunctionModifierKind
+  public enum AccessModifierKind
   {
     Public,
     Internal,

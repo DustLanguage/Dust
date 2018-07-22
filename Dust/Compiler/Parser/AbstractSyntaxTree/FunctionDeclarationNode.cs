@@ -5,11 +5,11 @@ namespace Dust.Compiler.Parser.AbstractSyntaxTree
   public class FunctionDeclarationNode : Node
   {
     public string Name { get; }
-    public List<FunctionModifier> Modifiers { get; }
+    public List<AccessModifier> Modifiers { get; }
     public List<FunctionParameter> Parameters { get; }
     public Node Body { get; }
 
-    public FunctionDeclarationNode(string name, List<FunctionModifier> modifiers, List<FunctionParameter> parameters, Node body, SourceRange range)
+    public FunctionDeclarationNode(string name, List<AccessModifier> modifiers, List<FunctionParameter> parameters, Node body, SourceRange range)
     {
       Name = name;
       Modifiers = modifiers;

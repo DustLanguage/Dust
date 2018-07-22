@@ -49,17 +49,36 @@ namespace Dust.Compiler.Parser
 
       return module;
     }
-
+    
     private Node ParseStatement()
     {
-      if (MatchToken(SyntaxTokenKind.LetKeyword))
+      if (MatchToken(SyntaxTokenKind.FnKeyword, false))
       {
-        return ParseLet();
+        Error(Errors.LetExpected, CurrentToken.Range);
+
+        return null;
       }
 
-      if (MatchToken(SyntaxTokenKind.FnKeyword, false) || MatchNextToken(SyntaxTokenKind.FnKeyword, false) || IsFunctionStartToken())
+      SourcePosition startPosition = null;
+
+      while (IsAccessModifier())
       {
-        return ParseFn();
+        if (startPosition == null)
+        {
+          startPosition = CurrentToken.Position;
+        }
+
+        Advance();
+      }
+
+      if (MatchNextToken(SyntaxTokenKind.FnKeyword, false))
+      {
+        return ParseFn(startPosition);
+      }
+
+      if (MatchToken(SyntaxTokenKind.LetKeyword))
+      {
+        return ParseLet(startPosition);
       }
 
       Error(Errors.UnexpectedToken, CurrentToken.Range);
@@ -67,15 +86,8 @@ namespace Dust.Compiler.Parser
       return null;
     }
 
-    private Node ParseFn()
+    private Node ParseFn(SourcePosition startPosition)
     {
-      SourcePosition position = CurrentToken.Position;
-
-      while (IsFunctionStartToken())
-      {
-        Advance();
-      }
-
       if (MatchToken(SyntaxTokenKind.LetKeyword) == false)
       {
         Error(Errors.LetExpected, CurrentToken.Range);
@@ -86,33 +98,37 @@ namespace Dust.Compiler.Parser
         Error(Errors.FnExpected, CurrentToken.Range);
       }
 
-      List<FunctionModifier> modifiers = new List<FunctionModifier>();
+      List<AccessModifier> modifiers = new List<AccessModifier>();
+
+      bool modifierSeen = false;
 
       for (int i = tokens.IndexOf(CurrentToken); i >= 0; i--)
       {
-        FunctionModifierKind? kind = FunctionModifier.ParseKind(tokens[i].Kind);
+        AccessModifierKind? kind = AccessModifier.ParseKind(tokens[i].Kind);
 
         if (kind == null)
         {
+          if (modifierSeen)
+          {
+            break;
+          }
+
           continue;
         }
 
-        FunctionModifier modifier = new FunctionModifier(tokens[i], kind.Value);
+        AccessModifier modifier = new AccessModifier(tokens[i], kind.Value);
 
         modifiers.Add(modifier);
-      }
 
-      if (Peek().Kind == SyntaxTokenKind.Identifier)
-      {
-        ValidateFunctionModifiers(modifiers, Peek().Range);
+        modifierSeen = true;
       }
-
-      Advance();
 
       if (MatchToken(SyntaxTokenKind.Identifier, false) == false)
       {
         Error(Errors.IdentifierExpected, CurrentToken.Range);
       }
+
+      ValidateFunctionModifiers(modifiers, PeekBack().Range);
 
       string name = CurrentToken.Text;
 
@@ -183,13 +199,11 @@ namespace Dust.Compiler.Parser
 
       bodyNode.Range = new SourceRange(bodyStartPosition, CurrentToken.Position);
 
-      return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, new SourceRange(position, CurrentToken.Position));
+      return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, new SourceRange(startPosition, CurrentToken.Position));
     }
 
-    private PropertyDeclarationNode ParseLet()
+    private PropertyDeclarationNode ParseLet(SourcePosition startPosition)
     {
-      SourcePosition startPosition = PeekBack().Position;
-
       bool isMutable = MatchToken(SyntaxTokenKind.MutKeyword);
 
       if (CurrentToken.Kind != SyntaxTokenKind.Identifier)
@@ -208,7 +222,7 @@ namespace Dust.Compiler.Parser
       return node;
     }
 
-    private bool IsFunctionStartToken(SyntaxToken token = null)
+    private bool IsAccessModifier(SyntaxToken token = null)
     {
       SyntaxTokenKind kind = token?.Kind ?? CurrentToken.Kind;
 
@@ -227,17 +241,17 @@ namespace Dust.Compiler.Parser
       Diagnostics.Add(error);
     }
 
-    private static (int publicCount, int internalCount, int protectedCount, int privateCount, int staticCount) CountModifiers(List<FunctionModifier> modifiers)
+    private static (int publicCount, int internalCount, int protectedCount, int privateCount, int staticCount) CountModifiers(List<AccessModifier> modifiers)
     {
-      return (modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Public), modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Internal), modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Protected), modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Private), modifiers.Count((modifier) => modifier.Kind == FunctionModifierKind.Static));
+      return (modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Public), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Internal), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Protected), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Private), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Static));
     }
 
-    private void ModifierError(Error error, FunctionModifier modifier, string arg0 = null, string arg1 = null)
+    private void ModifierError(Error error, AccessModifier modifier, string arg0 = null, string arg1 = null)
     {
       Error(error, modifier.Token.Range, arg0, arg1);
     }
 
-    private void ValidateFunctionModifiers(List<FunctionModifier> modifiers, SourceRange nameIdentifierRange)
+    private void ValidateFunctionModifiers(List<AccessModifier> modifiers, SourceRange nameIdentifierRange)
     {
       if (modifiers.Count > 10)
       {
@@ -253,11 +267,11 @@ namespace Dust.Compiler.Parser
       bool containsProtected = protectedCount > 0;
       bool containsPrivate = privateCount > 0;
 
-      foreach (FunctionModifier modifier in modifiers.AsEnumerable().Reverse())
+      foreach (AccessModifier modifier in modifiers.AsEnumerable().Reverse())
       {
         switch (modifier.Kind)
         {
-          case FunctionModifierKind.Public:
+          case AccessModifierKind.Public:
             if (containsInternal)
             {
               ModifierError(Errors.IncombinableModifier, modifier, "public", "internal");
@@ -279,7 +293,7 @@ namespace Dust.Compiler.Parser
             }
 
             break;
-          case FunctionModifierKind.Internal:
+          case AccessModifierKind.Internal:
             if (containsPublic)
             {
               Error(Errors.IncombinableModifier, CurrentToken.Range, "internal", "public");
@@ -301,7 +315,7 @@ namespace Dust.Compiler.Parser
             }
 
             break;
-          case FunctionModifierKind.Protected:
+          case AccessModifierKind.Protected:
             if (containsPublic)
             {
               Error(Errors.IncombinableModifier, CurrentToken.Range, "protected", "public");
@@ -323,7 +337,7 @@ namespace Dust.Compiler.Parser
             }
 
             break;
-          case FunctionModifierKind.Private:
+          case AccessModifierKind.Private:
             if (containsPublic)
             {
               Error(Errors.IncombinableModifier, CurrentToken.Range, "private", "public");
@@ -345,7 +359,7 @@ namespace Dust.Compiler.Parser
             }
 
             break;
-          case FunctionModifierKind.Static:
+          case AccessModifierKind.Static:
             if (staticCount > 1)
             {
               ModifierError(Errors.ModifierAlreadySeen, modifier, "static");
