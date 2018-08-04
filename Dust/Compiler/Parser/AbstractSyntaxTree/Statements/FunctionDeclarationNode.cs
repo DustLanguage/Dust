@@ -2,7 +2,7 @@
 
 namespace Dust.Compiler.Parser.AbstractSyntaxTree
 {
-  public class FunctionDeclarationNode : Node
+  public class FunctionDeclarationNode : Statement
   {
     public string Name { get; }
     public List<AccessModifier> Modifiers { get; }

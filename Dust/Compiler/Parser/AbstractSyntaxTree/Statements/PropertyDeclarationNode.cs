@@ -5,10 +5,11 @@
     public bool IsMutable { get; }
     public string Name { get; }
 
-    public PropertyDeclarationNode(string name, bool isMutable)
+    public PropertyDeclarationNode(string name, bool isMutable,  SourceRange range)
     {
       Name = name;
       IsMutable = isMutable;
+      Range = range;
     }
 
     public override void Visit(IVisitor visitor)
