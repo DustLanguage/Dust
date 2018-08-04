@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
@@ -35,7 +34,7 @@ namespace Dust.Compiler.Parser
 
       while (position < tokens.Count - 1)
       {
-        Node statement = ParseStatement();
+        Node statement = ParseDeclaration();
 
         if (statement == null)
         {
@@ -49,9 +48,10 @@ namespace Dust.Compiler.Parser
 
       return module;
     }
-    
-    private Node ParseStatement()
+
+    private Node ParseDeclaration()
     {
+      // This shouldn't be here
       if (MatchToken(SyntaxTokenKind.FnKeyword, false))
       {
         Error(Errors.LetExpected, CurrentToken.Range);
@@ -73,20 +73,32 @@ namespace Dust.Compiler.Parser
 
       if (MatchNextToken(SyntaxTokenKind.FnKeyword, false))
       {
-        return ParseFn(startPosition);
+        return ParseFunctionDeclaration(startPosition);
       }
 
       if (MatchToken(SyntaxTokenKind.LetKeyword))
       {
-        return ParseLet(startPosition);
+        return ParsePropertyDeclaration(startPosition);
       }
 
-      Error(Errors.UnexpectedToken, CurrentToken.Range);
+      Node node = ParseStatement();
+      
+      if (node == null)
+      {
+        Error(Errors.UnexpectedToken, CurrentToken.Range);
 
+        return null;
+      }
+
+      return node;
+    }
+
+    private Node ParseStatement()
+    {
       return null;
     }
 
-    private Node ParseFn(SourcePosition startPosition)
+    private Node ParseFunctionDeclaration(SourcePosition startPosition)
     {
       if (MatchToken(SyntaxTokenKind.LetKeyword) == false)
       {
@@ -125,7 +137,7 @@ namespace Dust.Compiler.Parser
 
       if (MatchToken(SyntaxTokenKind.Identifier, false) == false)
       {
-        Error(Errors.IdentifierExpected, CurrentToken.Range);
+        Error(Errors.IdentifierExpected, CurrentToken.Range, "function declaration");
       }
 
       ValidateFunctionModifiers(modifiers, PeekBack().Range);
@@ -202,20 +214,16 @@ namespace Dust.Compiler.Parser
       return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, new SourceRange(startPosition, CurrentToken.Position));
     }
 
-    private PropertyDeclarationNode ParseLet(SourcePosition startPosition)
+    private PropertyDeclarationNode ParsePropertyDeclaration(SourcePosition startPosition)
     {
       bool isMutable = MatchToken(SyntaxTokenKind.MutKeyword);
 
       if (CurrentToken.Kind != SyntaxTokenKind.Identifier)
       {
-        // Syntax error
-        Console.WriteLine("error");
+        Error(Errors.IdentifierExpected, CurrentToken.Range, "property declaration");
       }
 
-      PropertyDeclarationNode node = new PropertyDeclarationNode(CurrentToken.Text, isMutable)
-      {
-        Range = new SourceRange(startPosition, new SourcePosition(CurrentToken.Position.Line, CurrentToken.Position.Column + CurrentToken.Text.Length))
-      };
+      PropertyDeclarationNode node = new PropertyDeclarationNode(CurrentToken.Text, isMutable, new SourceRange(startPosition, new SourcePosition(CurrentToken.Position.Line, CurrentToken.Position.Column + CurrentToken.Text.Length)));
 
       Advance();
 
@@ -230,7 +238,7 @@ namespace Dust.Compiler.Parser
     }
 
     private void Error(Error error, SourceRange range, string arg0 = null, string arg1 = null)
-    {
+    {    
       error.Range = range;
 
       if (arg0 != null)
@@ -243,14 +251,22 @@ namespace Dust.Compiler.Parser
 
     private static (int publicCount, int internalCount, int protectedCount, int privateCount, int staticCount) CountModifiers(List<AccessModifier> modifiers)
     {
-      return (modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Public), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Internal), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Protected), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Private), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Static));
+      return (modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Public), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Internal), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Protected),
+        modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Private), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Static));
     }
 
     private void ModifierError(Error error, AccessModifier modifier, string arg0 = null, string arg1 = null)
     {
       Error(error, modifier.Token.Range, arg0, arg1);
     }
-
+    
+    // Contexts:
+    // ContextKind
+    // 
+    //
+    // Lexer/parser/interpreter extensions in Dust and C#
+    // Optional parameters when overriding a function
+    // Functions that you can and cannot call super on - abstract functions that don't need to be implemented, if not implemented will do nothing
     private void ValidateFunctionModifiers(List<AccessModifier> modifiers, SourceRange nameIdentifierRange)
     {
       if (modifiers.Count > 10)
