@@ -31,5 +31,12 @@ namespace Dust.Compiler.Parser
 
       return null;
     }
+
+    public override string ToString()
+    {
+      string[] strings = {"public", "internal", "protected", "private", "static"};
+
+      return strings[(int) Kind];
+    }
   }
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.Parser.AbstractSyntaxTree;
+using Dust.Extensions;
 
 namespace Dust.Compiler.Parser
 {
@@ -51,7 +52,7 @@ namespace Dust.Compiler.Parser
 
     private Node ParseDeclaration()
     {
-      // This shouldn't be here
+      // TODO: Move this
       if (MatchToken(SyntaxTokenKind.FnKeyword, false))
       {
         Error(Errors.LetExpected, CurrentToken.Range);
@@ -82,7 +83,7 @@ namespace Dust.Compiler.Parser
       }
 
       Node node = ParseStatement();
-      
+
       if (node == null)
       {
         Error(Errors.UnexpectedToken, CurrentToken.Range);
@@ -238,7 +239,7 @@ namespace Dust.Compiler.Parser
     }
 
     private void Error(Error error, SourceRange range, string arg0 = null, string arg1 = null)
-    {    
+    {
       error.Range = range;
 
       if (arg0 != null)
@@ -249,24 +250,11 @@ namespace Dust.Compiler.Parser
       Diagnostics.Add(error);
     }
 
-    private static (int publicCount, int internalCount, int protectedCount, int privateCount, int staticCount) CountModifiers(List<AccessModifier> modifiers)
-    {
-      return (modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Public), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Internal), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Protected),
-        modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Private), modifiers.Count((modifier) => modifier.Kind == AccessModifierKind.Static));
-    }
-
     private void ModifierError(Error error, AccessModifier modifier, string arg0 = null, string arg1 = null)
     {
       Error(error, modifier.Token.Range, arg0, arg1);
     }
-    
-    // Contexts:
-    // ContextKind
-    // 
-    //
-    // Lexer/parser/interpreter extensions in Dust and C#
-    // Optional parameters when overriding a function
-    // Functions that you can and cannot call super on - abstract functions that don't need to be implemented, if not implemented will do nothing
+
     private void ValidateFunctionModifiers(List<AccessModifier> modifiers, SourceRange nameIdentifierRange)
     {
       if (modifiers.Count > 10)
@@ -276,112 +264,32 @@ namespace Dust.Compiler.Parser
         return;
       }
 
-      (int publicCount, int internalCount, int protectedCount, int privateCount, int staticCount) = CountModifiers(modifiers);
+      List<AccessModifier> distinctModifiers = modifiers.DistinctBy((modifier) => modifier.Kind).ToList();
 
-      bool containsPublic = publicCount > 0;
-      bool containsInternal = internalCount > 0;
-      bool containsProtected = protectedCount > 0;
-      bool containsPrivate = privateCount > 0;
-
-      foreach (AccessModifier modifier in modifiers.AsEnumerable().Reverse())
+      if (distinctModifiers.Count != modifiers.Count)
       {
-        switch (modifier.Kind)
+        foreach (AccessModifier modifier in modifiers.Except(distinctModifiers))
         {
-          case AccessModifierKind.Public:
-            if (containsInternal)
-            {
-              ModifierError(Errors.IncombinableModifier, modifier, "public", "internal");
-            }
+          ModifierError(Errors.ModifierAlreadySeen, modifier, modifier.ToString());
+        }
+      }
 
-            if (containsProtected)
-            {
-              ModifierError(Errors.IncombinableModifier, modifier, "public", "protected");
-            }
+      foreach (AccessModifier modifier in modifiers)
+      {
+        // Static is an exception, it can be used alongside any other modifier
+        if (modifier.Kind == AccessModifierKind.Static)
+        {
+          continue;
+        }
 
-            if (containsPrivate)
-            {
-              ModifierError(Errors.IncombinableModifier, modifier, "public", "private");
-            }
+        foreach (AccessModifierKind kind in new[] {AccessModifierKind.Public, AccessModifierKind.Internal, AccessModifierKind.Protected, AccessModifierKind.Private})
+        {
+          List<AccessModifier> incompatibleModifiers = modifiers.FindAll((m) => m.Kind == kind && m != modifier);
 
-            if (publicCount > 1)
-            {
-              ModifierError(Errors.ModifierAlreadySeen, modifier, "public");
-            }
-
-            break;
-          case AccessModifierKind.Internal:
-            if (containsPublic)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "internal", "public");
-            }
-
-            if (containsProtected)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "internal", "protected");
-            }
-
-            if (containsPrivate)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "internal", "private");
-            }
-
-            if (internalCount > 1)
-            {
-              ModifierError(Errors.ModifierAlreadySeen, modifier, "internal");
-            }
-
-            break;
-          case AccessModifierKind.Protected:
-            if (containsPublic)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "protected", "public");
-            }
-
-            if (containsInternal)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "protected", "internal");
-            }
-
-            if (containsPrivate)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "protected", "private");
-            }
-
-            if (protectedCount > 1)
-            {
-              ModifierError(Errors.ModifierAlreadySeen, modifier, "protected");
-            }
-
-            break;
-          case AccessModifierKind.Private:
-            if (containsPublic)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "private", "public");
-            }
-
-            if (containsInternal)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "private", "internal");
-            }
-
-            if (containsProtected)
-            {
-              Error(Errors.IncombinableModifier, CurrentToken.Range, "private", "protected");
-            }
-
-            if (privateCount > 1)
-            {
-              ModifierError(Errors.ModifierAlreadySeen, modifier, "private");
-            }
-
-            break;
-          case AccessModifierKind.Static:
-            if (staticCount > 1)
-            {
-              ModifierError(Errors.ModifierAlreadySeen, modifier, "static");
-            }
-
-            break;
+          foreach (AccessModifier incompatibleModifier in incompatibleModifiers)
+          {
+            ModifierError(Errors.IncombinableModifier, modifier, modifier.ToString(), incompatibleModifier.ToString());
+          }
         }
       }
     }
