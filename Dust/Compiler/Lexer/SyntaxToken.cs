@@ -4,6 +4,7 @@
   {
     public SyntaxTokenKind Kind { get; set; }
     public string Text { get; set; }
+    public string Lexeme { get; set; }
 
     public SourcePosition Position
     {

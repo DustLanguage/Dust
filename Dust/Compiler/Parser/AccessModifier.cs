@@ -34,9 +34,7 @@ namespace Dust.Compiler.Parser
 
     public override string ToString()
     {
-      string[] strings = {"public", "internal", "protected", "private", "static"};
-
-      return strings[(int) Kind];
+      return Token.Lexeme;
     }
   }
 }

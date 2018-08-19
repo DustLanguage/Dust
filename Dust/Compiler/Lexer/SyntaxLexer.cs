@@ -63,9 +63,11 @@ namespace Dust.Compiler.Lexer
 
     private SyntaxToken LexCharacter(char character)
     {
+      int start =source.Position ;
+
       SyntaxToken token = new SyntaxToken
       {
-        Position = GetSourcePosition(source.Position)
+        Position = GetSourcePosition(start)
       };
 
       switch (character)
@@ -188,12 +190,16 @@ namespace Dust.Compiler.Lexer
         default:
           if (char.IsDigit(character))
           {
-            return LexNumericLiteral();
+            token = LexNumericLiteral();
+
+            break;
           }
 
           if (char.IsLetter(character) || character == '_')
           {
-            return LexIdentifierOrKeyword();
+            token = LexIdentifierOrKeyword();
+
+            break;
           }
 
           return null;
@@ -203,6 +209,8 @@ namespace Dust.Compiler.Lexer
       {
         token.Position = GetSourcePosition(source.Position);
       }
+
+      token.Lexeme = source.Text.SubstringRange(start, source.Position + 1);
 
       return token;
     }
@@ -296,7 +304,6 @@ namespace Dust.Compiler.Lexer
       return new SyntaxToken
       {
         Kind = keywordKind ?? SyntaxTokenKind.Identifier,
-        // +1 is needed because revert.
         Range = new SourceRange(start, GetSourcePosition(source.Position)),
         Text = text
       };
