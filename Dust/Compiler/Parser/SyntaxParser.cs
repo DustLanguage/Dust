@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
@@ -78,7 +78,7 @@ namespace Dust.Compiler.Parser
 
       if (node == null)
       {
-        Error(Errors.UnexpectedToken, CurrentToken.Range);
+        Error(Errors.UnexpectedToken, CurrentToken.Range, CurrentToken.Lexeme, "here");
 
         return null;
       }
