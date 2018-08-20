@@ -11,6 +11,7 @@
     public static Error ModifierAlreadySeen => CreateError("modifier '{0}' already seen");
     public static Error IncombinableModifier => CreateError("modifier '{0}' can't be combined with modifier '{1}'");
     public static Error UnexpectedToken => CreateError("unexpected token '{0}' in {1}");
+    public static Error UnexpectedTokenGlobal => CreateError("unexpected token '{0}'");
     public static Error TooManyIncompatibleModifiers => CreateError("too many incompatible modifiers");
 
     private static Error CreateError(string message)
