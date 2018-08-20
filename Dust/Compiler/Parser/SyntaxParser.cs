@@ -52,14 +52,6 @@ namespace Dust.Compiler.Parser
 
     private Node ParseDeclaration()
     {
-      // TODO: Move this
-      if (MatchToken(SyntaxTokenKind.FnKeyword, false))
-      {
-        Error(Errors.LetExpected, CurrentToken.Range);
-
-        return null;
-      }
-
       SourcePosition startPosition = null;
 
       while (IsAccessModifier())
@@ -72,7 +64,7 @@ namespace Dust.Compiler.Parser
         Advance();
       }
 
-      if (MatchNextToken(SyntaxTokenKind.FnKeyword, false))
+      if (MatchToken(SyntaxTokenKind.FnKeyword, false))
       {
         return ParseFunctionDeclaration(startPosition);
       }
@@ -101,11 +93,6 @@ namespace Dust.Compiler.Parser
 
     private Node ParseFunctionDeclaration(SourcePosition startPosition)
     {
-      if (MatchToken(SyntaxTokenKind.LetKeyword) == false)
-      {
-        Error(Errors.LetExpected, CurrentToken.Range);
-      }
-
       if (MatchToken(SyntaxTokenKind.FnKeyword) == false)
       {
         Error(Errors.FnExpected, CurrentToken.Range);
