@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
@@ -264,11 +264,13 @@ namespace Dust.Compiler.Parser
         return;
       }
 
+      modifiers.Reverse();
+
       List<AccessModifier> distinctModifiers = modifiers.DistinctBy((modifier) => modifier.Kind).ToList();
 
       if (distinctModifiers.Count != modifiers.Count)
       {
-        foreach (AccessModifier modifier in modifiers.Except(distinctModifiers))
+        foreach (AccessModifier modifier in modifiers.Except(distinctModifiers).Skip(1))
         {
           ModifierError(Errors.ModifierAlreadySeen, modifier, modifier.ToString());
         }
@@ -288,7 +290,12 @@ namespace Dust.Compiler.Parser
 
           foreach (AccessModifier incompatibleModifier in incompatibleModifiers)
           {
-            ModifierError(Errors.IncombinableModifier, modifier, modifier.ToString(), incompatibleModifier.ToString());
+            if (modifier.Kind != incompatibleModifier.Kind)
+            {
+              ModifierError(Errors.IncombinableModifier, modifier, modifier.ToString(), incompatibleModifier.ToString());
+
+              break;
+            }
           }
         }
       }
