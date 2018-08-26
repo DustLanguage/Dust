@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net.Http.Headers;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.parser.parsers;
@@ -9,20 +10,21 @@ namespace Dust.Compiler.Parser
 {
   public class SyntaxParser
   {
-    public List<Diagnostic> Diagnostics { get; } = new List<Diagnostic>();
+    private readonly List<Diagnostic> diagnostics = new List<Diagnostic>();
 
     public List<SyntaxToken> tokens;
     private int position;
 
     public SyntaxToken CurrentToken => tokens[position];
 
-    private readonly FunctionDeclarationParser functionDeclarationParser = new FunctionDeclarationParser();
-    private readonly PropertyDeclarationParser propertyDeclarationParser = new PropertyDeclarationParser();
+    private static readonly FunctionDeclarationParser functionDeclarationParser = new FunctionDeclarationParser();
+    private static readonly PropertyDeclarationParser propertyDeclarationParser = new PropertyDeclarationParser();
 
-    public Node Parse(List<SyntaxToken> tokens)
+    public SyntaxParseResult Parse(List<SyntaxToken> tokens)
     {
       this.tokens = tokens;
       position = 0;
+      diagnostics.Clear();
 
       if (tokens.Count == 0)
       {
@@ -47,7 +49,7 @@ namespace Dust.Compiler.Parser
 
       module.Range = new SourceRange(start, CurrentToken.Position);
 
-      return module;
+      return new SyntaxParseResult(module, diagnostics);
     }
 
     private Node ParseDeclaration()
@@ -107,7 +109,7 @@ namespace Dust.Compiler.Parser
         error.Format(arg0, arg1);
       }
 
-      Diagnostics.Add(error);
+      diagnostics.Add(error);
     }
 
     public void ModifierError(Error error, AccessModifier modifier, string arg0 = null, string arg1 = null)

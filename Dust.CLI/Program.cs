@@ -21,9 +21,9 @@ namespace Dust.CLI
         SyntaxLexer lexer = new SyntaxLexer();
         SyntaxParser parser = new SyntaxParser();
 
-        parser.Parse(lexer.Lex(input));
+        SyntaxParseResult result = parser.Parse(lexer.Lex(input));
 
-        foreach (Diagnostic diagnostic in parser.Diagnostics)
+        foreach (Diagnostic diagnostic in result.Diagnostics)
         {
           Console.WriteLine($"{diagnostic.Severity}: {diagnostic.Message} at {diagnostic.Range.Start}");
         }
