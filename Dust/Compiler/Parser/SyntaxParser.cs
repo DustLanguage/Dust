@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
+using Dust.Compiler.parser.parsers;
 using Dust.Compiler.Parser.AbstractSyntaxTree;
 using Dust.Compiler.Parser.Parsers;
 
@@ -10,25 +11,19 @@ namespace Dust.Compiler.Parser
   {
     public List<Diagnostic> Diagnostics { get; } = new List<Diagnostic>();
 
-    public readonly List<SyntaxToken> tokens;
+    public List<SyntaxToken> tokens;
     private int position;
 
     public SyntaxToken CurrentToken => tokens[position];
 
-    private readonly FunctionDeclarationParser functionDeclarationParser;
-    private readonly PropertyDeclarationParser propertyDeclarationParser;
+    private readonly FunctionDeclarationParser functionDeclarationParser = new FunctionDeclarationParser();
+    private readonly PropertyDeclarationParser propertyDeclarationParser = new PropertyDeclarationParser();
 
-    public SyntaxParser(List<SyntaxToken> tokens)
+    public Node Parse(List<SyntaxToken> tokens)
     {
       this.tokens = tokens;
       position = 0;
 
-      functionDeclarationParser = new FunctionDeclarationParser(this);
-      propertyDeclarationParser = new PropertyDeclarationParser(this);
-    }
-
-    public Node Parse()
-    {
       if (tokens.Count == 0)
       {
         return null;
@@ -71,12 +66,12 @@ namespace Dust.Compiler.Parser
 
       if (MatchToken(SyntaxTokenKind.FnKeyword, false))
       {
-        return functionDeclarationParser.Parse(startPosition);
+        return functionDeclarationParser.Parse(this, startPosition);
       }
 
       if (MatchToken(SyntaxTokenKind.LetKeyword))
       {
-        return propertyDeclarationParser.Parse(startPosition);
+        return propertyDeclarationParser.Parse(this, startPosition);
       }
 
       Node node = ParseStatement();

@@ -18,9 +18,10 @@ namespace Dust.CLI
           return;
         }
 
-        SyntaxParser parser = new SyntaxParser(new SyntaxLexer(input).Lex());
+        SyntaxLexer lexer = new SyntaxLexer();
+        SyntaxParser parser = new SyntaxParser();
 
-        parser.Parse();
+        parser.Parse(lexer.Lex(input));
 
         foreach (Diagnostic diagnostic in parser.Diagnostics)
         {

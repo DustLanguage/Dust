@@ -8,17 +8,14 @@ namespace Dust.Compiler.Lexer
 {
   public class SyntaxLexer : IDisposable
   {
-    private readonly StringReader source;
+    private StringReader source;
 
-    public SyntaxLexer(string text)
+    public List<SyntaxToken> Lex(string text)
     {
       Debug.Assert(text != null, "Text is null.");
 
       source = new StringReader(text);
-    }
 
-    public List<SyntaxToken> Lex()
-    {
       List<SyntaxToken> tokens = new List<SyntaxToken>();
 
       if (string.IsNullOrWhiteSpace(source.Text))
@@ -63,7 +60,7 @@ namespace Dust.Compiler.Lexer
 
     private SyntaxToken LexCharacter(char character)
     {
-      int start =source.Position ;
+      int start = source.Position;
 
       SyntaxToken token = new SyntaxToken
       {

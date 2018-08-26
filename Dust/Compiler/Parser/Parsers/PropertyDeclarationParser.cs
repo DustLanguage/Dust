@@ -4,24 +4,20 @@ using Dust.Compiler.Parser.AbstractSyntaxTree;
 
 namespace Dust.Compiler.Parser.Parsers
 {
-  public class PropertyDeclarationParser : SyntaxParserExtension
+  public class PropertyDeclarationParser : ISyntaxParserExtension
   {
-    public PropertyDeclarationParser(SyntaxParser parser) : base(parser)
+    public Node Parse(SyntaxParser parser, SourcePosition startPosition)
     {
-    }
+      bool isMutable = parser.MatchToken(SyntaxTokenKind.MutKeyword);
 
-    public override Node Parse(SourcePosition startPosition)
-    {
-      bool isMutable = Parser.MatchToken(SyntaxTokenKind.MutKeyword);
-
-      if (Parser.CurrentToken.Kind != SyntaxTokenKind.Identifier)
+      if (parser.CurrentToken.Kind != SyntaxTokenKind.Identifier)
       {
-        Parser.Error(Errors.IdentifierExpected, Parser.CurrentToken.Range, "property declaration");
+        parser.Error(Errors.IdentifierExpected, parser.CurrentToken.Range, "property declaration");
       }
 
-      PropertyDeclarationNode node = new PropertyDeclarationNode(Parser.CurrentToken.Text, isMutable, new SourceRange(startPosition, new SourcePosition(Parser.CurrentToken.Position.Line, Parser.CurrentToken.Position.Column + Parser.CurrentToken.Text.Length)));
+      PropertyDeclarationNode node = new PropertyDeclarationNode(parser.CurrentToken.Text, isMutable, new SourceRange(startPosition, new SourcePosition(parser.CurrentToken.Position.Line, parser.CurrentToken.Position.Column + parser.CurrentToken.Text.Length)));
 
-      Parser.Advance();
+      parser.Advance();
 
       return node;
     }

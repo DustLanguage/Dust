@@ -2,31 +2,29 @@ using System.Collections.Generic;
 using System.Linq;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
+using Dust.Compiler.Parser;
 using Dust.Compiler.Parser.AbstractSyntaxTree;
+using Dust.Compiler.Parser.Parsers;
 using Dust.Extensions;
 
-namespace Dust.Compiler.Parser.Parsers
+namespace Dust.Compiler.parser.parsers
 {
-  public class FunctionDeclarationParser : SyntaxParserExtension
+  public class FunctionDeclarationParser : ISyntaxParserExtension
   {
-    public FunctionDeclarationParser(SyntaxParser parser) : base(parser)
+    public Node Parse(SyntaxParser parser, SourcePosition startPosition)
     {
-    }
-
-    public override Node Parse(SourcePosition startPosition)
-    {
-      if (Parser.MatchToken(SyntaxTokenKind.FnKeyword) == false)
+      if (parser.MatchToken(SyntaxTokenKind.FnKeyword) == false)
       {
-        Parser.Error(Errors.FnExpected, Parser.CurrentToken.Range);
+        parser.Error(Errors.FnExpected, parser.CurrentToken.Range);
       }
 
       List<AccessModifier> modifiers = new List<AccessModifier>();
 
       bool modifierSeen = false;
 
-      for (int i = Parser.tokens.IndexOf(Parser.CurrentToken); i >= 0; i--)
+      for (int i = parser.tokens.IndexOf(parser.CurrentToken); i >= 0; i--)
       {
-        AccessModifierKind? kind = AccessModifier.ParseKind(Parser.tokens[i].Kind);
+        AccessModifierKind? kind = AccessModifier.ParseKind(parser.tokens[i].Kind);
 
         if (kind == null)
         {
@@ -38,78 +36,78 @@ namespace Dust.Compiler.Parser.Parsers
           continue;
         }
 
-        AccessModifier modifier = new AccessModifier(Parser.tokens[i], kind.Value);
+        AccessModifier modifier = new AccessModifier(parser.tokens[i], kind.Value);
 
         modifiers.Add(modifier);
 
         modifierSeen = true;
       }
 
-      if (Parser.MatchToken(SyntaxTokenKind.Identifier, false) == false)
+      if (parser.MatchToken(SyntaxTokenKind.Identifier, false) == false)
       {
-        Parser.Error(Errors.IdentifierExpected, Parser.CurrentToken.Range, "function declaration");
+        parser.Error(Errors.IdentifierExpected, parser.CurrentToken.Range, "function declaration");
       }
 
-      ValidateFunctionModifiers(modifiers, Parser.PeekBack().Range);
+      ValidateFunctionModifiers(parser, modifiers, parser.PeekBack().Range);
 
-      string name = Parser.CurrentToken.Text;
+      string name = parser.CurrentToken.Text;
 
-      Parser.Advance();
+      parser.Advance();
 
-      if (Parser.MatchToken(SyntaxTokenKind.OpenParenthesis) == false)
+      if (parser.MatchToken(SyntaxTokenKind.OpenParenthesis) == false)
       {
-        Parser.Error(Errors.OpenParenthesisExpected, Parser.CurrentToken.Range);
+        parser.Error(Errors.OpenParenthesisExpected, parser.CurrentToken.Range);
       }
 
-      if (Parser.IsAtEnd())
+      if (parser.IsAtEnd())
       {
-        Parser.Revert();
+        parser.Revert();
 
         return null;
       }
 
-      SourcePosition bodyStartPosition = Parser.CurrentToken.Position;
+      SourcePosition bodyStartPosition = parser.CurrentToken.Position;
 
       List<FunctionParameter> parameters = new List<FunctionParameter>();
 
-      if (Parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
+      if (parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
       {
-        while (Parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
+        while (parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
         {
-          bool isMutable = Parser.MatchToken(SyntaxTokenKind.MutKeyword);
+          bool isMutable = parser.MatchToken(SyntaxTokenKind.MutKeyword);
 
-          if (Parser.MatchToken(SyntaxTokenKind.Identifier))
+          if (parser.MatchToken(SyntaxTokenKind.Identifier))
           {
-            parameters.Add(new FunctionParameter(Parser.CurrentToken.Text, null, isMutable));
+            parameters.Add(new FunctionParameter(parser.CurrentToken.Text, null, isMutable));
           }
           else
           {
-            Parser.Error(Errors.CloseParenthesisExpected, Parser.CurrentToken.Range);
+            parser.Error(Errors.CloseParenthesisExpected, parser.CurrentToken.Range);
 
             break;
           }
         }
       }
 
-      if (Parser.MatchToken(SyntaxTokenKind.OpenBrace) == false)
+      if (parser.MatchToken(SyntaxTokenKind.OpenBrace) == false)
       {
-        Parser.Error(Errors.OpenBraceExpected, new SourceRange(Parser.CurrentToken.Position, Parser.CurrentToken.Position + 1));
+        parser.Error(Errors.OpenBraceExpected, new SourceRange(parser.CurrentToken.Position, parser.CurrentToken.Position + 1));
       }
 
       CodeBlockNode bodyNode = new CodeBlockNode();
 
-      SyntaxToken closeBrace = Parser.CurrentToken;
+      SyntaxToken closeBrace = parser.CurrentToken;
 
-      while (Parser.MatchToken(SyntaxTokenKind.CloseBrace) == false)
+      while (parser.MatchToken(SyntaxTokenKind.CloseBrace) == false)
       {
-        if (Parser.IsAtEnd())
+        if (parser.IsAtEnd())
         {
-          Parser.Error(Errors.CloseBraceExpected, new SourceRange(closeBrace.Position, closeBrace.Position + 1));
+          parser.Error(Errors.CloseBraceExpected, new SourceRange(closeBrace.Position, closeBrace.Position + 1));
 
           break;
         }
 
-        Node statement = Parser.ParseStatement();
+        Node statement = parser.ParseStatement();
 
         if (statement == null)
         {
@@ -119,16 +117,16 @@ namespace Dust.Compiler.Parser.Parsers
         bodyNode.Children.Add(statement);
       }
 
-      bodyNode.Range = new SourceRange(bodyStartPosition, Parser.CurrentToken.Position);
+      bodyNode.Range = new SourceRange(bodyStartPosition, parser.CurrentToken.Position);
 
-      return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, new SourceRange(startPosition, Parser.CurrentToken.Position));
+      return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, new SourceRange(startPosition, parser.CurrentToken.Position));
     }
 
-    private void ValidateFunctionModifiers(List<AccessModifier> modifiers, SourceRange nameIdentifierRange)
+    private void ValidateFunctionModifiers(SyntaxParser parser, List<AccessModifier> modifiers, SourceRange nameIdentifierRange)
     {
       if (modifiers.Count > 10)
       {
-        Parser.Error(Errors.TooManyIncompatibleModifiers, nameIdentifierRange);
+        parser.Error(Errors.TooManyIncompatibleModifiers, nameIdentifierRange);
 
         return;
       }
@@ -141,7 +139,7 @@ namespace Dust.Compiler.Parser.Parsers
       {
         foreach (AccessModifier modifier in modifiers.Except(distinctModifiers).Skip(1))
         {
-          Parser.ModifierError(Errors.ModifierAlreadySeen, modifier, modifier.ToString());
+          parser.ModifierError(Errors.ModifierAlreadySeen, modifier, modifier.ToString());
         }
       }
 
@@ -161,7 +159,7 @@ namespace Dust.Compiler.Parser.Parsers
           {
             if (modifier.Kind != incompatibleModifier.Kind)
             {
-              Parser.ModifierError(Errors.IncombinableModifier, modifier, modifier.ToString(), incompatibleModifier.ToString());
+              parser.ModifierError(Errors.IncombinableModifier, modifier, modifier.ToString(), incompatibleModifier.ToString());
 
               break;
             }
