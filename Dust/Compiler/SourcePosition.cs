@@ -1,6 +1,8 @@
-﻿namespace Dust.Compiler
+﻿using System;
+
+namespace Dust.Compiler
 {
-  public class SourcePosition
+  public class SourcePosition : IEquatable<SourcePosition>
   {
     public string File { get; }
     public int Line { get; }

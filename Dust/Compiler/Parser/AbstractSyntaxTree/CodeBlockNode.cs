@@ -25,6 +25,5 @@ namespace Dust.Compiler.Parser.AbstractSyntaxTree
         node.Visit(visitor);
       }
     }
-
   }
 }

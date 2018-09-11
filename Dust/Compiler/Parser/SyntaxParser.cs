@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Net.Http.Headers;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.parser.parsers;
@@ -64,6 +63,11 @@ namespace Dust.Compiler.Parser
         }
 
         Advance();
+      }
+
+      if (startPosition == null)
+      {
+        startPosition = CurrentToken.Position;
       }
 
       if (MatchToken(SyntaxTokenKind.FnKeyword, false))
