@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.parser.parsers;
@@ -163,6 +164,14 @@ namespace Dust.Compiler.Parser
     public bool IsAtEnd()
     {
       return position >= tokens.Count || CurrentToken.Kind == SyntaxTokenKind.EndOfFile;
+    }
+    
+    public void ConsumeIf(Func<SyntaxToken, bool> condition)
+    {
+      if (condition(CurrentToken))
+      {
+        Advance();
+      }
     }
   }
 }

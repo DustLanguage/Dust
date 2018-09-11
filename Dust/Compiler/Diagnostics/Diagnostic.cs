@@ -32,5 +32,10 @@ namespace Dust.Compiler.Diagnostics
 
       Message = arg1 != null ? string.Format(Message, arg0, arg1) : string.Format(Message, arg0);
     }
+
+    public override string ToString()
+    {
+      return Message;
+    }
   }
 }

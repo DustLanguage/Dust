@@ -54,98 +54,110 @@ namespace Dust.Compiler.parser.parsers
 
       parser.Advance();
 
-      if (parser.MatchToken(SyntaxTokenKind.OpenParenthesis) == false)
-      {
-        parser.Error(Errors.OpenParenthesisExpected, parser.CurrentToken.Range);
-      }
-
-      if (parser.IsAtEnd())
-      {
-        parser.Revert();
-
-        return null;
-      }
-
       List<FunctionParameter> parameters = new List<FunctionParameter>();
 
-      bool comma = false;
+      bool parentheses = false;
 
-      if (parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
-      {
-        while (parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
-        {
-          if (parser.MatchToken(SyntaxTokenKind.Comma))
-          {
-            comma = true;
-
-            continue;
-          }
-
-          bool isMutable = parser.MatchToken(SyntaxTokenKind.MutKeyword);
-
-          if (parser.MatchToken(SyntaxTokenKind.Identifier))
-          {
-            // Type
-
-            if (parser.MatchToken(SyntaxTokenKind.Identifier))
-            {
-              // Identifier
-
-              parameters.Add(new FunctionParameter(parser.PeekBack().Text, null, isMutable));
-
-              comma = false;
-            }
-          }
-          else
-          {
-            parser.Error(Errors.CloseParenthesisExpected, parser.CurrentToken.Range);
-
-            break;
-          }
-        }
-      }
-
-      if (comma)
-      {
-        parser.Error(Errors.ExpectedAfter, parser.CurrentToken.Range, "parameter", "comma");
-      }
-
-      SourcePosition bodyStartPosition = parser.CurrentToken.Position;
-      
-      if (parser.MatchToken(SyntaxTokenKind.OpenBrace) == false)
-      {
-        parser.Error(Errors.OpenBraceExpected, new SourceRange(parser.CurrentToken.Position, parser.CurrentToken.Position + 1));
-      }
-
-      CodeBlockNode bodyNode = new CodeBlockNode();
-
-      SyntaxToken closeBrace = parser.CurrentToken;
-
-      while (parser.MatchToken(SyntaxTokenKind.CloseBrace) == false)
+      if (parser.MatchToken(SyntaxTokenKind.OpenParenthesis))
       {
         if (parser.IsAtEnd())
         {
-          parser.Error(Errors.CloseBraceExpected, new SourceRange(closeBrace.Position, closeBrace.Position + 1));
+          parser.Revert();
 
-          break;
+          return null;
         }
 
-        Node statement = parser.ParseStatement();
+        bool comma = false;
 
-        if (statement == null)
+        if (parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
         {
-          break;
+          while (parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
+          {
+            if (parser.MatchToken(SyntaxTokenKind.Comma))
+            {
+              comma = true;
+
+              continue;
+            }
+
+            bool isMutable = parser.MatchToken(SyntaxTokenKind.MutKeyword);
+
+            if (parser.MatchToken(SyntaxTokenKind.Identifier))
+            {
+              // Type
+
+              if (parser.MatchToken(SyntaxTokenKind.Identifier))
+              {
+                // Identifier
+
+                parameters.Add(new FunctionParameter(parser.PeekBack().Text, null, isMutable));
+
+                comma = false;
+              }
+            }
+            else
+            {
+              parser.Error(Errors.CloseParenthesisExpected, parser.CurrentToken.Range);
+
+              break;
+            }
+          }
         }
 
-        bodyNode.Children.Add(statement);
+        parentheses = true;
+
+        if (comma)
+        {
+          parser.Error(Errors.ExpectedAfter, parser.CurrentToken.Range, "parameter", "comma");
+        }
       }
 
-      bodyNode.Range = new SourceRange(bodyStartPosition, parser.CurrentToken.Position);
+      SourcePosition bodyStartPosition = parser.CurrentToken.Position;
+
+      CodeBlockNode bodyNode = null;
+
+      if (parser.MatchToken(SyntaxTokenKind.OpenBrace))
+      {
+        if (parentheses == false)
+        {
+          parser.Error(Errors.OpenParenthesisExpected, parser.CurrentToken.Range);
+          parser.Error(Errors.CloseParenthesisExpected, parser.CurrentToken.Range);
+
+          parser.ConsumeIf((token) => token.Kind == SyntaxTokenKind.CloseBrace);
+        }
+        else
+        {
+          SyntaxToken closeBrace = parser.CurrentToken;
+
+          bodyNode = new CodeBlockNode();
+
+          while (parser.MatchToken(SyntaxTokenKind.CloseBrace) == false)
+          {
+            if (parser.IsAtEnd())
+            {
+              parser.Error(Errors.CloseBraceExpected, new SourceRange(closeBrace.Position, closeBrace.Position + 1));
+
+              break;
+            }
+
+            Node statement = parser.ParseStatement();
+
+            if (statement == null)
+            {
+              break;
+            }
+
+            bodyNode.Children.Add(statement);
+          }
+
+          bodyNode.Range = new SourceRange(bodyStartPosition, parser.CurrentToken.Position);
+        }
+      }
 
       return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, new SourceRange(startPosition, parser.CurrentToken.Position));
     }
 
-    private void ValidateFunctionModifiers(SyntaxParser parser, List<AccessModifier> modifiers, SourceRange nameIdentifierRange)
+    private static void ValidateFunctionModifiers(SyntaxParser parser, List<AccessModifier> modifiers, SourceRange nameIdentifierRange)
     {
       if (modifiers.Count > 10)
       {
