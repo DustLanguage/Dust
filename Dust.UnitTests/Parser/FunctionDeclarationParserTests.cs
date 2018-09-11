@@ -18,7 +18,10 @@ namespace Dust.UnitTests.Parser
 
       int firstBrace = code.IndexOf("{", StringComparison.Ordinal);
 
-      bodyRange = SourceRange.FromText(code.SubstringRange(firstBrace, code.IndexOf("}", StringComparison.Ordinal) + 1), offset: firstBrace);
+      if (firstBrace != -1)
+      {
+        bodyRange = SourceRange.FromText(code.SubstringRange(firstBrace, code.IndexOf("}", StringComparison.Ordinal) + 1), offset: firstBrace);
+      }
     }
 
     [Theory]
@@ -32,14 +35,21 @@ namespace Dust.UnitTests.Parser
       Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function"));
     }
 
-    [Fact]
-    public void FunctionWithOneParameter()
+    [Theory]
+    [InlineData("fn function(int param1) {}")]
+    [InlineData("fn function(int param1)")]
+    public void FunctionWithOneParameter(string code)
     {
-      Expect(Parse("fn function(int param1) {}")).To.ParseSuccessfully();
+      Setup(code);
+
+      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
+      {
+        new FunctionParameter("param1", null, true),
+      }));
     }
 
     [Theory]
-    // TODO: More arguments once Rider fixes this
+    // TODO: More parameters once Rider fixes this
     [InlineData("fn function(mut int param1, string param2) {}")]
     [InlineData("fn function(mut int param1, string param2)")]
     public void FunctionWithMultipleParameters(string code)

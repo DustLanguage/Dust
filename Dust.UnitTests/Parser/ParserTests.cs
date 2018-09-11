@@ -42,7 +42,7 @@ namespace Dust.UnitTests.Parser
 
       public ExpectFunctions ParseSuccessfully()
       {
-        Assert.True(result.Diagnostics.Any((diagnostic) => diagnostic.Severity == DiagnosticSeverity.Error) == false, "failed to parse");
+        Assert.True(result.Diagnostics.Any((diagnostic) => diagnostic.Severity == DiagnosticSeverity.Error) == false, $"failed to parse\n{string.Join('\n', result.Diagnostics)}");
 
         return new ExpectFunctions(result);
       }
