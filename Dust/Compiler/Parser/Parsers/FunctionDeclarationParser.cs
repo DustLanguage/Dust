@@ -66,19 +66,35 @@ namespace Dust.Compiler.parser.parsers
         return null;
       }
 
-      SourcePosition bodyStartPosition = parser.CurrentToken.Position;
-
       List<FunctionParameter> parameters = new List<FunctionParameter>();
+
+      bool comma = false;
 
       if (parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
       {
         while (parser.MatchToken(SyntaxTokenKind.CloseParenthesis) == false)
         {
+          if (parser.MatchToken(SyntaxTokenKind.Comma))
+          {
+            comma = true;
+
+            continue;
+          }
+
           bool isMutable = parser.MatchToken(SyntaxTokenKind.MutKeyword);
 
           if (parser.MatchToken(SyntaxTokenKind.Identifier))
           {
-            parameters.Add(new FunctionParameter(parser.CurrentToken.Text, null, isMutable));
+            // Type
+
+            if (parser.MatchToken(SyntaxTokenKind.Identifier))
+            {
+              // Identifier
+
+              parameters.Add(new FunctionParameter(parser.PeekBack().Text, null, isMutable));
+
+              comma = false;
+            }
           }
           else
           {
@@ -89,6 +105,13 @@ namespace Dust.Compiler.parser.parsers
         }
       }
 
+      if (comma)
+      {
+        parser.Error(Errors.ExpectedAfter, parser.CurrentToken.Range, "parameter", "comma");
+      }
+
+      SourcePosition bodyStartPosition = parser.CurrentToken.Position;
+      
       if (parser.MatchToken(SyntaxTokenKind.OpenBrace) == false)
       {
         parser.Error(Errors.OpenBraceExpected, new SourceRange(parser.CurrentToken.Position, parser.CurrentToken.Position + 1));

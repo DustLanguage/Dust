@@ -9,6 +9,8 @@
     CloseBrace,
     OpenBracket,
     CloseBracket,
+    Dot,
+    Comma,
     Plus,
     PlusEquals,
     PlusPlus,
@@ -21,11 +23,12 @@
     Slash,
     SlashEquals,
     SlashSlash,
-    EndOfFile,
+
     // Literals
     NumericLiteral,
     StringLiteral,
     Identifier,
+
     // Keywords
     LetKeyword,
     FnKeyword,
@@ -42,6 +45,7 @@
     InternalKeyword,
     ProtectedKeyword,
     PrivateKeyword,
-    StaticKeyword
+    StaticKeyword,
+    EndOfFile
   }
 }

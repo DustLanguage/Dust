@@ -13,6 +13,7 @@
     public static Error UnexpectedToken => CreateError("unexpected token '{0}' in {1}");
     public static Error UnexpectedTokenGlobal => CreateError("unexpected token '{0}'");
     public static Error TooManyIncompatibleModifiers => CreateError("too many incompatible modifiers");
+    public static Error ExpectedAfter => CreateError("{0} expected after {1}");
 
     private static Error CreateError(string message)
     {

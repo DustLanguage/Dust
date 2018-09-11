@@ -93,6 +93,14 @@ namespace Dust.Compiler.Lexer
           token.Kind = SyntaxTokenKind.CloseBracket;
 
           break;
+        case '.':
+          token.Kind = SyntaxTokenKind.Dot;
+
+          break;
+        case ',':
+          token.Kind = SyntaxTokenKind.Comma;
+
+          break;
         case '+':
           if (source.Peek() == '=')
           {
