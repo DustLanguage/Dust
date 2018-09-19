@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Dust.Compiler;
 using Dust.Compiler.Diagnostics;
@@ -16,7 +15,7 @@ namespace Dust.UnitTests.Parser
     protected CodeBlockNode root;
     protected SourceRange range;
 
-    private static readonly SyntaxLexer lexer = new SyntaxLexer();
+    protected static readonly SyntaxLexer lexer = new SyntaxLexer();
     private static readonly SyntaxParser parser = new SyntaxParser();
 
     protected virtual void Setup(string code)

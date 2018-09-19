@@ -1,9 +1,10 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Dust.Compiler;
+using Dust.Compiler.Lexer;
 using Dust.Compiler.Parser;
 using Dust.Compiler.Parser.AbstractSyntaxTree;
-using Dust.Extensions;
+using Dust.Compiler.Types;
 using Xunit;
 
 namespace Dust.UnitTests.Parser
@@ -11,17 +12,27 @@ namespace Dust.UnitTests.Parser
   public class FunctionDeclarationParserTests : ParserTests
   {
     private SourceRange bodyRange;
+    private List<AccessModifier> modifiers;
 
     protected override void Setup(string code)
     {
       base.Setup(code);
 
-      int firstBrace = code.IndexOf("{", StringComparison.Ordinal);
+      List<SyntaxToken> tokens = lexer.Lex(code);
 
-      if (firstBrace != -1)
+      SyntaxToken openBrace = tokens.Find((token) => token.Kind == SyntaxTokenKind.OpenBrace);
+
+      if (openBrace != null)
       {
-        bodyRange = SourceRange.FromText(code.SubstringRange(firstBrace, code.IndexOf("}", StringComparison.Ordinal) + 1), offset: firstBrace);
+        bodyRange = new SourceRange(openBrace.Position, tokens.Find((token) => token.Kind == SyntaxTokenKind.CloseBrace).Position);
       }
+
+      modifiers = tokens.Select((token) =>
+      {
+        AccessModifierKind? modifierKind = AccessModifier.ParseKind(token.Kind);
+
+        return modifierKind != null ? new AccessModifier(token, modifierKind.Value) : null;
+      }).Where((token) => token != null).ToList();
     }
 
     [Theory]
@@ -31,8 +42,30 @@ namespace Dust.UnitTests.Parser
     public void SimpleFunction(string code)
     {
       Setup(code);
-      
+
       Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function"));
+    }
+
+    [Theory]
+    [InlineData("fn int function() {}")]
+    [InlineData("fn int function()")]
+    [InlineData("fn int function")]
+    public void SimpleFunctionWithReturnType(string code)
+    {
+      Setup(code);
+
+      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", returnType: DustTypes.Int));
+    }
+
+    [Theory]
+    [InlineData("public fn function() {}")]
+    [InlineData("private fn int function()")]
+    [InlineData("static internal fn int function")]
+    public void SimpleFunctionWithAccessModifiers(string code)
+    {
+      Setup(code);
+
+      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", returnType: DustTypes.Int));
     }
 
     [Theory]
@@ -44,7 +77,7 @@ namespace Dust.UnitTests.Parser
 
       Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
       {
-        new FunctionParameter("param1", null, true),
+        new FunctionParameter("param1", null, true)
       }));
     }
 
@@ -63,14 +96,48 @@ namespace Dust.UnitTests.Parser
       }));
     }
 
-    private CodeBlockNode CreateFunctionDeclarationNode(string functionName, List<FunctionParameter> parameters = null)
+    [Theory]
+    // TODO: More parameters once Rider fixes this
+    [InlineData("fn int function(mut int param1, string param2) {}")]
+    [InlineData("fn int function(mut int param1, string param2)")]
+    public void FunctionWithMultipleParametersAndReturnType(string code)
+    {
+      Setup(code);
+
+      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
+      {
+        new FunctionParameter("param1", null, true),
+        new FunctionParameter("param2", null, false)
+      }, DustTypes.Int));
+    }
+
+    [Theory]
+    [InlineData("fn int function(mut int param1, string param2) {}")]
+    [InlineData("fn int function(mut int param1, string param2)")]
+    public void FunctionWithMultipleParametersAndAccessModifiers(string code)
+    {
+      Setup(code);
+
+      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
+      {
+        new FunctionParameter("param1", null, true),
+        new FunctionParameter("param2", null, false)
+      }, DustTypes.Int));
+    }
+
+    private CodeBlockNode CreateFunctionDeclarationNode(string functionName, List<FunctionParameter> parameters = null, DustType returnType = null)
     {
       if (parameters == null)
       {
         parameters = Lists.Empty<FunctionParameter>();
       }
 
-      root.Children.Add(new FunctionDeclarationNode(functionName, Lists.Empty<AccessModifier>(), parameters, new CodeBlockNode(bodyRange), range));
+      if (returnType == null)
+      {
+        returnType = DustTypes.Void;
+      }
+
+      root.Children.Add(new FunctionDeclarationNode(functionName, modifiers, parameters, new CodeBlockNode(bodyRange), returnType, range));
 
       return root;
     }

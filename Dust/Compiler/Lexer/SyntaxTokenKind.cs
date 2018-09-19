@@ -46,6 +46,9 @@
     ProtectedKeyword,
     PrivateKeyword,
     StaticKeyword,
+    
+    // Invisible tokens
+    EndOfLine,
     EndOfFile
   }
 }

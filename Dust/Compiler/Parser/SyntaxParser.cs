@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
-using Dust.Compiler.parser.parsers;
 using Dust.Compiler.Parser.AbstractSyntaxTree;
 using Dust.Compiler.Parser.Parsers;
 
@@ -15,7 +14,7 @@ namespace Dust.Compiler.Parser
     public List<SyntaxToken> tokens;
     private int position;
 
-    public SyntaxToken CurrentToken => tokens[position];
+    public SyntaxToken CurrentToken => position >= tokens.Count ? null : tokens[position];
 
     private static readonly FunctionDeclarationParser functionDeclarationParser = new FunctionDeclarationParser();
     private static readonly PropertyDeclarationParser propertyDeclarationParser = new PropertyDeclarationParser();
@@ -48,7 +47,7 @@ namespace Dust.Compiler.Parser
       }
 
       module.Range = new SourceRange(start, CurrentToken.Position);
-
+      
       return new SyntaxParseResult(module, diagnostics);
     }
 
@@ -85,7 +84,7 @@ namespace Dust.Compiler.Parser
 
       if (node == null)
       {
-        Error(Errors.UnexpectedTokenGlobal, CurrentToken.Range, CurrentToken.Lexeme);
+        Error(Errors.UnexpectedTokenGlobal, CurrentToken, CurrentToken.Lexeme);
 
         return null;
       }
@@ -105,6 +104,11 @@ namespace Dust.Compiler.Parser
       return kind == SyntaxTokenKind.PublicKeyword || kind == SyntaxTokenKind.InternalKeyword || kind == SyntaxTokenKind.ProtectedKeyword || kind == SyntaxTokenKind.PrivateKeyword || kind == SyntaxTokenKind.StaticKeyword;
     }
 
+    public void Error(Error error, SyntaxToken token, string arg0 = null, string arg1 = null)
+    {
+      Error(error, token.Range, arg0, arg1);
+    }
+    
     public void Error(Error error, SourceRange range, string arg0 = null, string arg1 = null)
     {
       error.Range = range;
@@ -119,7 +123,7 @@ namespace Dust.Compiler.Parser
 
     public void ModifierError(Error error, AccessModifier modifier, string arg0 = null, string arg1 = null)
     {
-      Error(error, modifier.Token.Range, arg0, arg1);
+      Error(error, modifier.Token, arg0, arg1);
     }
 
     public bool MatchToken(SyntaxTokenKind kind, bool advance = true, int offset = 0)
@@ -165,7 +169,7 @@ namespace Dust.Compiler.Parser
     {
       return position >= tokens.Count || CurrentToken.Kind == SyntaxTokenKind.EndOfFile;
     }
-    
+
     public void ConsumeIf(Func<SyntaxToken, bool> condition)
     {
       if (condition(CurrentToken))

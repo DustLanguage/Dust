@@ -2,7 +2,6 @@
 {
   public static class Errors
   {
-    public static Error OpenBraceExpected => CreateError("{ expected");
     public static Error CloseBraceExpected => CreateError("} expected");
     public static Error OpenParenthesisExpected => CreateError("( expected");
     public static Error CloseParenthesisExpected => CreateError(") expected");
@@ -14,6 +13,8 @@
     public static Error UnexpectedTokenGlobal => CreateError("unexpected token '{0}'");
     public static Error TooManyIncompatibleModifiers => CreateError("too many incompatible modifiers");
     public static Error ExpectedAfter => CreateError("{0} expected after {1}");
+    public static Error ExpectedBefore => CreateError("{0} expected before {1}");
+    public static Error UnknownType => CreateError("unknown type '{0}'");
 
     private static Error CreateError(string message)
     {

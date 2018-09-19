@@ -12,7 +12,7 @@ namespace Dust.Compiler.Parser.Parsers
 
       if (parser.CurrentToken.Kind != SyntaxTokenKind.Identifier)
       {
-        parser.Error(Errors.IdentifierExpected, parser.CurrentToken.Range, "property declaration");
+        parser.Error(Errors.IdentifierExpected, parser.CurrentToken, "property declaration");
       }
 
       PropertyDeclarationNode node = new PropertyDeclarationNode(parser.CurrentToken.Text, isMutable, new SourceRange(startPosition, new SourcePosition(parser.CurrentToken.Position.Line, parser.CurrentToken.Position.Column + parser.CurrentToken.Text.Length)));

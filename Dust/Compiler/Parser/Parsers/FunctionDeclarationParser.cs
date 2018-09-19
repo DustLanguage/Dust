@@ -2,12 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
-using Dust.Compiler.Parser;
 using Dust.Compiler.Parser.AbstractSyntaxTree;
-using Dust.Compiler.Parser.Parsers;
+using Dust.Compiler.Types;
 using Dust.Extensions;
 
-namespace Dust.Compiler.parser.parsers
+namespace Dust.Compiler.Parser.Parsers
 {
   public class FunctionDeclarationParser : ISyntaxParserExtension
   {
@@ -15,7 +14,29 @@ namespace Dust.Compiler.parser.parsers
     {
       if (parser.MatchToken(SyntaxTokenKind.FnKeyword) == false)
       {
-        parser.Error(Errors.FnExpected, parser.CurrentToken.Range);
+        parser.Error(Errors.FnExpected, parser.CurrentToken);
+      }
+
+      DustType returnType = null;
+      string typeName = parser.CurrentToken.Text;
+
+      if (parser.MatchToken(SyntaxTokenKind.Identifier, false))
+      {
+        if (parser.MatchNextToken(SyntaxTokenKind.Identifier, false))
+        {
+          returnType = DustTypes.GetType(typeName);
+
+          parser.Advance();
+        }
+        else
+        {
+          returnType = DustTypes.Void;
+        }
+      }
+
+      if (returnType == null)
+      {
+        parser.Error(Errors.UnknownType, parser.CurrentToken, typeName);
       }
 
       List<AccessModifier> modifiers = new List<AccessModifier>();
@@ -45,7 +66,7 @@ namespace Dust.Compiler.parser.parsers
 
       if (parser.MatchToken(SyntaxTokenKind.Identifier, false) == false)
       {
-        parser.Error(Errors.IdentifierExpected, parser.CurrentToken.Range, "function declaration");
+        parser.Error(Errors.IdentifierExpected, parser.CurrentToken, "function declaration");
       }
 
       ValidateFunctionModifiers(parser, modifiers, parser.PeekBack().Range);
@@ -58,6 +79,7 @@ namespace Dust.Compiler.parser.parsers
 
       bool parentheses = false;
 
+      if (parser.MatchToken(SyntaxTokenKind.OpenParenthesis))
       if (parser.MatchToken(SyntaxTokenKind.OpenParenthesis))
       {
         if (parser.IsAtEnd())
@@ -84,20 +106,28 @@ namespace Dust.Compiler.parser.parsers
 
             if (parser.MatchToken(SyntaxTokenKind.Identifier))
             {
-              // Type
+              DustType type = DustTypes.GetType(parser.PeekBack().Text);
 
               if (parser.MatchToken(SyntaxTokenKind.Identifier))
               {
-                // Identifier
-
-                parameters.Add(new FunctionParameter(parser.PeekBack().Text, null, isMutable));
+                parameters.Add(new FunctionParameter(parser.PeekBack().Text, type, isMutable));
 
                 comma = false;
+              }
+              else if (parser.MatchToken(SyntaxTokenKind.MutKeyword))
+              {
+                parser.Error(Errors.ExpectedBefore, parser.PeekBack(), "mut", "parameter name");
+
+                parser.Advance();
+              }
+              else
+              {
+                parser.Error(Errors.ExpectedBefore, parser.PeekBack(), "type", "parameter name");
               }
             }
             else
             {
-              parser.Error(Errors.CloseParenthesisExpected, parser.CurrentToken.Range);
+              parser.Error(Errors.CloseParenthesisExpected, parser.CurrentToken);
 
               break;
             }
@@ -108,11 +138,11 @@ namespace Dust.Compiler.parser.parsers
 
         if (comma)
         {
-          parser.Error(Errors.ExpectedAfter, parser.CurrentToken.Range, "parameter", "comma");
+          parser.Error(Errors.ExpectedAfter, parser.CurrentToken, "parameter", "comma");
         }
       }
 
-      SourcePosition bodyStartPosition = parser.CurrentToken.Position;
+      SourcePosition bodyStartPosition = parser.CurrentToken?.Position;
 
       CodeBlockNode bodyNode = null;
 
@@ -120,8 +150,8 @@ namespace Dust.Compiler.parser.parsers
       {
         if (parentheses == false)
         {
-          parser.Error(Errors.OpenParenthesisExpected, parser.CurrentToken.Range);
-          parser.Error(Errors.CloseParenthesisExpected, parser.CurrentToken.Range);
+          parser.Error(Errors.OpenParenthesisExpected, parser.CurrentToken);
+          parser.Error(Errors.CloseParenthesisExpected, parser.CurrentToken);
 
           parser.ConsumeIf((token) => token.Kind == SyntaxTokenKind.CloseBrace);
         }
@@ -154,7 +184,7 @@ namespace Dust.Compiler.parser.parsers
         }
       }
 
-      return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, new SourceRange(startPosition, parser.CurrentToken.Position));
+      return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, returnType, new SourceRange(startPosition, parser.CurrentToken.Position));
     }
 
     private static void ValidateFunctionModifiers(SyntaxParser parser, List<AccessModifier> modifiers, SourceRange nameIdentifierRange)

@@ -192,6 +192,10 @@ namespace Dust.Compiler.Lexer
         case '"':
         case '\'':
           return LexString();
+        case '\n':
+          token.Kind = SyntaxTokenKind.EndOfLine;
+
+          break;
         default:
           if (char.IsDigit(character))
           {
@@ -248,9 +252,6 @@ namespace Dust.Compiler.Lexer
 
       if (invalidDot)
       {
-        // This might need to be here
-        // source.Revert();
-
         // Syntax error
         Console.WriteLine("invalid dot");
 
