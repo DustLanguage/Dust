@@ -80,7 +80,6 @@ namespace Dust.Compiler.Parser.Parsers
       bool parentheses = false;
 
       if (parser.MatchToken(SyntaxTokenKind.OpenParenthesis))
-      if (parser.MatchToken(SyntaxTokenKind.OpenParenthesis))
       {
         if (parser.IsAtEnd())
         {
