@@ -13,6 +13,11 @@ namespace Dust.CLI
       {
         string input = Console.ReadLine();
 
+        if (input == "")
+        {
+          continue;
+        }
+
         if (input == "exit")
         {
           return;
