@@ -1,4 +1,4 @@
-﻿namespace Dust.Compiler.Lexer
+namespace Dust.Compiler.Lexer
 {
   public enum SyntaxTokenKind
   {
@@ -46,9 +46,11 @@
     ProtectedKeyword,
     PrivateKeyword,
     StaticKeyword,
-    
+
     // Invisible tokens
     EndOfLine,
-    EndOfFile
+    EndOfFile,
+
+    Invalid
   }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
@@ -99,16 +99,16 @@ namespace Dust.Compiler.Parser
 
     private bool IsAccessModifier(SyntaxToken token = null)
     {
-      SyntaxTokenKind kind = token?.Kind ?? CurrentToken.Kind;
+      token = token ?? CurrentToken;
 
-      return kind == SyntaxTokenKind.PublicKeyword || kind == SyntaxTokenKind.InternalKeyword || kind == SyntaxTokenKind.ProtectedKeyword || kind == SyntaxTokenKind.PrivateKeyword || kind == SyntaxTokenKind.StaticKeyword;
+      return token.IsOr(SyntaxTokenKind.PublicKeyword, SyntaxTokenKind.InternalKeyword, SyntaxTokenKind.ProtectedKeyword, SyntaxTokenKind.PrivateKeyword, SyntaxTokenKind.StaticKeyword);
     }
 
     public void Error(Error error, SyntaxToken token, string arg0 = null, string arg1 = null)
     {
       Error(error, token.Range, arg0, arg1);
     }
-    
+
     public void Error(Error error, SourceRange range, string arg0 = null, string arg1 = null)
     {
       error.Range = range;
@@ -155,9 +155,19 @@ namespace Dust.Compiler.Parser
       return IsAtEnd() ? null : tokens[position + 1];
     }
 
-    public SyntaxToken PeekBack()
+    public SyntaxToken PeekBack(int offset = 1, bool onlyCurrentLine = true)
     {
-      return position == 0 ? null : tokens[position - 1];
+      if (position == 0)
+      {
+        return SyntaxToken.Invalid;
+      }
+
+      if (onlyCurrentLine)
+      {
+        return tokens[position - offset].Position.Line == CurrentToken.Position.Line ? tokens[position - offset] : SyntaxToken.Invalid;
+      }
+
+      return tokens[position - offset];
     }
 
     public void Revert()
@@ -167,7 +177,7 @@ namespace Dust.Compiler.Parser
 
     public bool IsAtEnd()
     {
-      return position >= tokens.Count || CurrentToken.Kind == SyntaxTokenKind.EndOfFile;
+      return position >= tokens.Count || CurrentToken.Is(SyntaxTokenKind.EndOfFile);
     }
 
     public void ConsumeIf(Func<SyntaxToken, bool> condition)
