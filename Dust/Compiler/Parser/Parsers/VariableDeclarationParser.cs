@@ -7,22 +7,6 @@ namespace Dust.Compiler.Parser.Parsers
 {
   public class VariableDeclarationParser : SyntaxParserExtension
   {
-    // private let mut a = 1 -> private mut a = 1
-    // private let a = 1 -> private let a = 1
-    // let mut v = 2 -> mut v = 2
-    // let b = 3 -> let b = 3
-    // let int b = 3 -> int b = 3
-    // let mut int b = 2 -> int mut b = 2
-
-    //                                   vvvvvv
-    // no type, not M -> [AM] let        [NAME]
-    //                                   vvvvvv
-    // type, not M -> [AM]    [TYPE]     [NAME]
-    //                                   vvvvvv  
-    // no type, M -> [AM]     mut        [NAME]
-    //                            vvvvvv 
-    // type, M -> [AM]        mut [TYPE] [NAME]
-
     public VariableDeclarationParser(SyntaxParser parser)
       : base(parser)
     {
