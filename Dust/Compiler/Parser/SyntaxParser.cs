@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
@@ -16,8 +16,8 @@ namespace Dust.Compiler.Parser
 
     public SyntaxToken CurrentToken => position >= tokens.Count ? null : tokens[position];
 
-    private static readonly FunctionDeclarationParser functionDeclarationParser = new FunctionDeclarationParser();
-    private static readonly PropertyDeclarationParser propertyDeclarationParser = new PropertyDeclarationParser();
+    private FunctionDeclarationParser functionDeclarationParser;
+    private VariableDeclarationParser variableDeclarationParser;
 
     public SyntaxParseResult Parse(List<SyntaxToken> tokens)
     {
@@ -25,6 +25,9 @@ namespace Dust.Compiler.Parser
       position = 0;
       diagnostics.Clear();
 
+      functionDeclarationParser = new FunctionDeclarationParser(this);
+      variableDeclarationParser = new VariableDeclarationParser(this);
+      
       if (tokens.Count == 0)
       {
         return null;
@@ -47,7 +50,7 @@ namespace Dust.Compiler.Parser
       }
 
       module.Range = new SourceRange(start, CurrentToken.Position);
-      
+
       return new SyntaxParseResult(module, diagnostics);
     }
 
@@ -72,21 +75,26 @@ namespace Dust.Compiler.Parser
 
       if (MatchToken(SyntaxTokenKind.FnKeyword, false))
       {
-        return functionDeclarationParser.Parse(this, startPosition);
+        return functionDeclarationParser.Parse(startPosition);
       }
 
-      if (MatchToken(SyntaxTokenKind.LetKeyword))
+      if (MatchToken(SyntaxTokenKind.LetKeyword) || MatchToken(SyntaxTokenKind.MutKeyword))
       {
-        return propertyDeclarationParser.Parse(this, startPosition);
+        return variableDeclarationParser.Parse(startPosition, false);
       }
 
       Node node = ParseStatement();
 
       if (node == null)
       {
-        Error(Errors.UnexpectedTokenGlobal, CurrentToken, CurrentToken.Lexeme);
+        node = variableDeclarationParser.Parse(startPosition, true);
 
-        return null;
+        if (node == null)
+        {
+          Error(Errors.UnexpectedTokenGlobal, CurrentToken, CurrentToken.Lexeme);
+
+          return null;          
+        }
       }
 
       return node;
@@ -128,9 +136,17 @@ namespace Dust.Compiler.Parser
 
     public bool MatchToken(SyntaxTokenKind kind, bool advance = true, int offset = 0)
     {
-      if (IsAtEnd() || CurrentToken.Kind == SyntaxTokenKind.EndOfFile) return false;
+      if (IsAtEnd() || CurrentToken.Is(SyntaxTokenKind.EndOfFile))
+      {
+        return false;
+      }
 
-      bool match = tokens[position + offset].Kind == kind;
+      if (position + offset >= tokens.Count || position + offset < 0)
+      {
+        return false;
+      }
+      
+      bool match = tokens[position + offset].Is(kind);
 
       if (match && advance)
       {

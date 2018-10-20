@@ -1,4 +1,4 @@
-namespace Dust.Compiler.Lexer
+﻿namespace Dust.Compiler.Lexer
 {
   public enum SyntaxTokenKind
   {
@@ -11,6 +11,7 @@ namespace Dust.Compiler.Lexer
     CloseBracket,
     Dot,
     Comma,
+    Equals,
     Plus,
     PlusEquals,
     PlusPlus,

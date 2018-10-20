@@ -101,6 +101,10 @@ namespace Dust.Compiler.Lexer
           token.Kind = SyntaxTokenKind.Comma;
 
           break;
+        case '=':
+          token.Kind = SyntaxTokenKind.Equals;
+
+          break;
         case '+':
           if (source.Peek() == '=')
           {
@@ -266,7 +270,6 @@ namespace Dust.Compiler.Lexer
       };
     }
 
-
     private SyntaxToken LexIdentifierOrKeyword()
     {
       char? character = source.Current;
@@ -409,7 +412,6 @@ namespace Dust.Compiler.Lexer
 
       return new SourcePosition(line, column);
     }
-
 
     private static bool IsStringTerminator(char character)
     {
