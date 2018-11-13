@@ -284,8 +284,6 @@ namespace Dust.Compiler.Lexer
 
       bool invalidSymbol = false;
 
-      source.StartRange();
-
       while (true)
       {
         if (character != null && IsValidIdentiferOrKeywordCharacter(character.Value))
@@ -310,7 +308,7 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
-      string text = source.GetRange();
+      string text = source.Range(start.Position, source.Position);
 
       SyntaxTokenKind? keywordKind = LexKeyword(text);
 
@@ -329,9 +327,7 @@ namespace Dust.Compiler.Lexer
       char? character = source.Peek();
       bool unterminated = false;
 
-      SourcePosition position = source.GetSourcePosition(source.Position);
-
-      source.StartRange(source.Position + 1);
+      SourcePosition startPosition = source.GetSourcePosition(source.Position);
 
       while (character != null && IsStringTerminator(character.Value) == false)
       {
@@ -347,19 +343,17 @@ namespace Dust.Compiler.Lexer
 
       if (unterminated)
       {
-        // Syntax error
-        Console.WriteLine("unterminated string");
+        // syntax error
+        Console.WriteLine("unterminated string literal");
 
         return null;
       }
 
-      source.Advance();
-
       return new SyntaxToken
       {
         Kind = SyntaxTokenKind.StringLiteral,
-        Position = position,
-        Text = source.GetRange()
+        Position = startPosition,
+        Text = source.Range(startPosition + 1, source.Position)
       };
     }
 

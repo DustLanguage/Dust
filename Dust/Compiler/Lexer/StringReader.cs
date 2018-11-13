@@ -51,6 +51,11 @@ namespace Dust.Compiler.Lexer
       return Text.SubstringRange(start, end);
     }
 
+    public string Range(SourcePosition start, int end)
+    {
+      return Range(start.Position, end);
+    }
+
     public string Range(SourceRange range)
     {
       return Range(range.Start.Position, range.End.Position);
