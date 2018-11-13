@@ -14,7 +14,7 @@ namespace Dust.Compiler.Parser.Parsers
       : base(parser)
     {
     }
-    
+
     public FunctionDeclarationNode Parse(SourcePosition startPosition)
     {
       if (Parser.MatchToken(SyntaxTokenKind.FnKeyword) == false)

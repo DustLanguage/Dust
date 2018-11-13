@@ -6,7 +6,7 @@ using Dust.Compiler.Types;
 namespace Dust.Compiler.Parser.Parsers
 {
   public class VariableDeclarationParser : SyntaxParserExtension
-  {
+  {    
     public VariableDeclarationParser(SyntaxParser parser)
       : base(parser)
     {
@@ -61,7 +61,7 @@ namespace Dust.Compiler.Parser.Parsers
 
       SyntaxToken lastToken = Parser.PeekBack();
 
-      return new VariableDeclarationNode(name, isMutable, type, initializer, new SourceRange(startPosition, new SourcePosition(lastToken.Position.Line, lastToken.Position.Column + lastToken.Text.Length)));
+      return new VariableDeclarationNode(name, isMutable, type, initializer, new SourceRange(startPosition, new SourcePosition(lastToken.Position.Line, lastToken.Position.Position + lastToken.Text.Length)));
     }
   }
 }

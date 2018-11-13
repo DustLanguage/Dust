@@ -14,7 +14,7 @@ namespace Dust.Compiler.Parser
     public List<SyntaxToken> tokens;
     private int position;
 
-    public SyntaxToken CurrentToken => position >= tokens.Count ? null : tokens[position];
+    public SyntaxToken CurrentToken => position >= tokens.Count ? SyntaxToken.Invalid : tokens[position];
 
     private FunctionDeclarationParser functionDeclarationParser;
     private VariableDeclarationParser variableDeclarationParser;
@@ -27,7 +27,7 @@ namespace Dust.Compiler.Parser
 
       functionDeclarationParser = new FunctionDeclarationParser(this);
       variableDeclarationParser = new VariableDeclarationParser(this);
-      
+
       if (tokens.Count == 0)
       {
         return null;
@@ -93,7 +93,7 @@ namespace Dust.Compiler.Parser
         {
           Error(Errors.UnexpectedTokenGlobal, CurrentToken, CurrentToken.Lexeme);
 
-          return null;          
+          return null;
         }
       }
 
@@ -145,7 +145,7 @@ namespace Dust.Compiler.Parser
       {
         return false;
       }
-      
+
       bool match = tokens[position + offset].Is(kind);
 
       if (match && advance)
@@ -173,7 +173,7 @@ namespace Dust.Compiler.Parser
 
     public SyntaxToken PeekBack(int offset = 1, bool onlyCurrentLine = true)
     {
-      if (position == 0)
+      if (position == 0 || CurrentToken == SyntaxToken.Invalid)
       {
         return SyntaxToken.Invalid;
       }

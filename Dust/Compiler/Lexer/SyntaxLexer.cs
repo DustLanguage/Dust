@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using Dust.Extensions;
 
 namespace Dust.Compiler.Lexer
 {
-  public class SyntaxLexer : IDisposable
+  public class SyntaxLexer
   {
     private StringReader source;
 
     public List<SyntaxToken> Lex(string text)
     {
-      Debug.Assert(text != null, "Text is null.");
+      Debug.Assert(text != null);
 
       source = new StringReader(text);
 
@@ -52,7 +50,7 @@ namespace Dust.Compiler.Lexer
       tokens.Add(new SyntaxToken
       {
         Kind = SyntaxTokenKind.EndOfFile,
-        Position = GetSourcePosition(source.Text.Length - 1)
+        Position = source.GetSourcePosition(source.Text.Length - 1)
       });
 
       return tokens;
@@ -64,7 +62,7 @@ namespace Dust.Compiler.Lexer
 
       SyntaxToken token = new SyntaxToken
       {
-        Position = GetSourcePosition(start)
+        Position = source.GetSourcePosition(start)
       };
 
       switch (character)
@@ -195,7 +193,9 @@ namespace Dust.Compiler.Lexer
           break;
         case '"':
         case '\'':
-          return LexString();
+          token = LexStringLiteral();
+
+          break;
         case '\n':
           token.Kind = SyntaxTokenKind.EndOfLine;
 
@@ -220,10 +220,10 @@ namespace Dust.Compiler.Lexer
 
       if (token.Position == null)
       {
-        token.Position = GetSourcePosition(source.Position);
+        token.Position = source.GetSourcePosition(source.Position);
       }
 
-      token.Lexeme = source.Text.SubstringRange(start, source.Position + 1);
+      token.Lexeme = source.Range(start, source.Position + 1);
 
       return token;
     }
@@ -232,12 +232,12 @@ namespace Dust.Compiler.Lexer
     {
       char? character = source.Peek();
 
-      SourcePosition position = GetSourcePosition(source.Position);
+      int startPosition = source.Position;
 
       bool dotFound = false;
       bool invalidDot = false;
 
-      source.Start();
+      SyntaxTokenKind? kind = null;
 
       while (character != null && (char.IsDigit(character.Value) || character.Value == '.'))
       {
@@ -249,6 +249,8 @@ namespace Dust.Compiler.Lexer
           }
 
           dotFound = true;
+
+          kind = SyntaxTokenKind.FloatLiteral;
         }
 
         character = source.Advance();
@@ -262,23 +264,27 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
+      if (character != null && (character.Value == 'd' || character.Value == 'D'))
+      {
+        kind = SyntaxTokenKind.DoubleLiteral;
+      }
+
       return new SyntaxToken
       {
-        Kind = SyntaxTokenKind.NumericLiteral,
-        Position = position,
-        Text = source.GetText()
+        Kind = kind ?? SyntaxTokenKind.IntLiteral,
+        Range = new SourceRange(source.GetSourcePosition(startPosition), source.GetSourcePosition(source.Position - 1)),
+        Text = source.Range(startPosition, source.Position)
       };
     }
 
     private SyntaxToken LexIdentifierOrKeyword()
     {
       char? character = source.Current;
-
-      SourcePosition start = GetSourcePosition(source.Position);
+      SourcePosition start = source.GetSourcePosition(source.Position);
 
       bool invalidSymbol = false;
 
-      source.Start();
+      source.StartRange();
 
       while (true)
       {
@@ -304,7 +310,7 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
-      string text = source.GetText();
+      string text = source.GetRange();
 
       SyntaxTokenKind? keywordKind = LexKeyword(text);
 
@@ -313,19 +319,19 @@ namespace Dust.Compiler.Lexer
       return new SyntaxToken
       {
         Kind = keywordKind ?? SyntaxTokenKind.Identifier,
-        Range = new SourceRange(start, GetSourcePosition(source.Position)),
+        Range = new SourceRange(start, source.GetSourcePosition(source.Position)),
         Text = text
       };
     }
 
-    private SyntaxToken LexString()
+    private SyntaxToken LexStringLiteral()
     {
       char? character = source.Peek();
       bool unterminated = false;
 
-      SourcePosition position = GetSourcePosition(source.Position - 1);
+      SourcePosition position = source.GetSourcePosition(source.Position);
 
-      source.Start(source.Position + 1);
+      source.StartRange(source.Position + 1);
 
       while (character != null && IsStringTerminator(character.Value) == false)
       {
@@ -347,11 +353,13 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
+      source.Advance();
+
       return new SyntaxToken
       {
         Kind = SyntaxTokenKind.StringLiteral,
         Position = position,
-        Text = source.GetText()
+        Text = source.GetRange()
       };
     }
 
@@ -401,26 +409,9 @@ namespace Dust.Compiler.Lexer
       return char.IsLetterOrDigit(character) || character == '_';
     }
 
-    private SourcePosition GetSourcePosition(int position)
-    {
-      Debug.Assert(position < source.Text.Length);
-
-      string text = source.Text.SubstringRange(0, position);
-
-      int line = text.Count(character => character == '\n');
-      int column = Math.Max(position - (text.LastIndexOf('\n') == -1 ? 0 : text.LastIndexOf('\n') + 2), 0);
-
-      return new SourcePosition(line, column);
-    }
-
     private static bool IsStringTerminator(char character)
     {
       return character == '\'' || character == '"';
-    }
-
-    public void Dispose()
-    {
-      source.Dispose();
     }
   }
 }

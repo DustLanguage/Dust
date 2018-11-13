@@ -1,15 +1,17 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using Dust.Extensions;
 
 namespace Dust.Compiler.Lexer
 {
-  public class StringReader : IDisposable
+  public class StringReader
   {
     public int Position { get; private set; }
     public char? Current => Text[Position];
     public string Text { get; }
 
-    private int startPosition;
+    private int rangeStartPosition;
 
     public StringReader(string text)
     {
@@ -44,19 +46,29 @@ namespace Dust.Compiler.Lexer
       return Text[Position];
     }
 
-    public void Start()
+    public string Range(int start, int end)
     {
-      Start(Position);
+      return Text.SubstringRange(start, end);
     }
 
-    public void Start(int position)
+    public string Range(SourceRange range)
     {
-      startPosition = position;
+      return Range(range.Start.Position, range.End.Position);
     }
 
-    public string GetText()
+    public void StartRange(int position)
     {
-      return Text.SubstringRange(startPosition, startPosition == Position ? Position + 1 : Position);
+      rangeStartPosition = position;
+    }
+
+    public void StartRange()
+    {
+      StartRange(Position);
+    }
+
+    public string GetRange()
+    {
+      return Range(rangeStartPosition, Position);
     }
 
     public void Revert()
@@ -64,13 +76,21 @@ namespace Dust.Compiler.Lexer
       Position--;
     }
 
+    public SourcePosition GetSourcePosition(int position)
+    {
+      Debug.Assert(position <= Text.Length);
+
+      string text = Text.SubstringRange(0, position);
+
+      int line = text.Count(character => character == '\n');
+      int column = Math.Max(position - (text.LastIndexOf('\n') == -1 ? 0 : text.LastIndexOf('\n') + 2), 0);
+
+      return new SourcePosition(line, column);
+    }
+
     public bool IsAtEnd()
     {
       return Position >= Text.Length;
-    }
-
-    public void Dispose()
-    {
     }
   }
 }
