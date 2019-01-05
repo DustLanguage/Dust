@@ -18,15 +18,18 @@ namespace Dust.Compiler.Parser
 
     private FunctionDeclarationParser functionDeclarationParser;
     private VariableDeclarationParser variableDeclarationParser;
+    private LiteralParser literalParser;
 
     public SyntaxParseResult Parse(List<SyntaxToken> tokens)
     {
       this.tokens = tokens;
       position = 0;
+
       diagnostics.Clear();
 
       functionDeclarationParser = new FunctionDeclarationParser(this);
       variableDeclarationParser = new VariableDeclarationParser(this);
+      literalParser = new LiteralParser(this);
 
       if (tokens.Count == 0)
       {
@@ -100,9 +103,25 @@ namespace Dust.Compiler.Parser
       return node;
     }
 
-    public Node ParseStatement()
+    public Statement ParseStatement()
     {
+      Expression expression = ParseExpression();
+
+      if (expression != null)
+      {
+        return new ExpressionStatement(expression);
+      }
+
       return null;
+    }
+
+    public Expression ParseExpression()
+    {
+      Expression expression = literalParser.ParseLiteral();
+
+      Advance();
+
+      return expression;
     }
 
     private bool IsAccessModifier(SyntaxToken token = null)
