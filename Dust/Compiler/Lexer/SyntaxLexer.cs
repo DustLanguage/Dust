@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -357,11 +357,22 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
+      string text = source.Range(startPosition + 1, source.Position);
+      SourcePosition endPosition = source.SourcePosition + 1;
+
+      if (text == "")
+      {
+        endPosition = source.SourcePosition;
+      }
+
+      SourceRange range = new SourceRange(startPosition, endPosition);
+
       return new SyntaxToken
       {
         Kind = SyntaxTokenKind.StringLiteral,
         Position = startPosition,
-        Text = source.Range(startPosition + 1, source.Position)
+        Range = range,
+        Text = text
       };
     }
 
