@@ -8,6 +8,9 @@ namespace Dust.Compiler.Lexer
   public class StringReader
   {
     public int Position { get; private set; }
+
+    public SourcePosition SourcePosition => GetSourcePosition(Position);
+
     public char? Current => Text[Position];
     public string Text { get; }
 

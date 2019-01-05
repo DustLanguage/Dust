@@ -26,7 +26,9 @@
     SlashSlash,
 
     // Literals
-    NumericLiteral,
+    IntLiteral,
+    FloatLiteral,
+    DoubleLiteral,
     StringLiteral,
     Identifier,
 
