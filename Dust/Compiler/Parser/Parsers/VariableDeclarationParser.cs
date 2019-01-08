@@ -6,19 +6,14 @@ using Dust.Compiler.Types;
 namespace Dust.Compiler.Parser.Parsers
 {
   public class VariableDeclarationParser : SyntaxParserExtension
-  {    
+  {
     public VariableDeclarationParser(SyntaxParser parser)
       : base(parser)
     {
     }
 
-    public VariableDeclarationNode Parse(SourcePosition startPosition, bool hasType)
+    public VariableDeclaration Parse(SourcePosition startPosition, bool hasType)
     {
-      if (hasType)
-      {
-        Parser.Advance();
-      }
-
       bool isMutable = Parser.PeekBack().Is(SyntaxTokenKind.MutKeyword);
 
       SyntaxToken typeToken = null;
@@ -33,7 +28,7 @@ namespace Dust.Compiler.Parser.Parsers
       }
       else if (hasType)
       {
-        typeToken = Parser.PeekBack(2);
+        typeToken = Parser.PeekBack();
       }
 
       DustType type = null;
@@ -41,6 +36,11 @@ namespace Dust.Compiler.Parser.Parsers
       if (typeToken != null)
       {
         type = DustTypes.GetType(typeToken.Text);
+      }
+
+      if (type == null)
+      {
+        Parser.Error(Errors.UnknownType, typeToken, typeToken.Text);
       }
 
       if (Parser.MatchToken(SyntaxTokenKind.Identifier) == false)
@@ -59,9 +59,7 @@ namespace Dust.Compiler.Parser.Parsers
         initializer = Parser.ParseStatement();
       }
 
-      SyntaxToken lastToken = Parser.PeekBack();
-
-      return new VariableDeclarationNode(name, isMutable, type, initializer, new SourceRange(startPosition, new SourcePosition(lastToken.Position.Line, lastToken.Position.Position + lastToken.Text.Length)));
+      return new VariableDeclaration(name, isMutable, type, initializer, new SourceRange(startPosition, Parser.CurrentToken.Range.End));
     }
   }
 }

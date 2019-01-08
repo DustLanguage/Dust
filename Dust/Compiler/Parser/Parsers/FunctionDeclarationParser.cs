@@ -15,7 +15,7 @@ namespace Dust.Compiler.Parser.Parsers
     {
     }
 
-    public FunctionDeclarationNode Parse(SourcePosition startPosition)
+    public FunctionDeclaration Parse(SourcePosition startPosition)
     {
       if (Parser.MatchToken(SyntaxTokenKind.FnKeyword) == false)
       {
@@ -188,7 +188,7 @@ namespace Dust.Compiler.Parser.Parsers
         }
       }
 
-      return new FunctionDeclarationNode(name, modifiers, parameters, bodyNode, returnType, new SourceRange(startPosition, Parser.CurrentToken.Position));
+      return new FunctionDeclaration(name, modifiers, parameters, bodyNode, returnType, new SourceRange(startPosition, Parser.CurrentToken.Position));
     }
 
     private void ValidateFunctionModifiers(List<AccessModifier> modifiers, SourceRange nameIdentifierRange)
