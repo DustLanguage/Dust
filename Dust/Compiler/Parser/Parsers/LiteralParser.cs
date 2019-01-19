@@ -46,11 +46,13 @@ namespace Dust.Compiler.Parser.Parsers
     public Expression ParseLiteral()
     {
       bool isNegative = Parser.CurrentToken.Is(SyntaxTokenKind.Minus);
-
       int multiplier = isNegative ? -1 : 1;
-      
-      Parser.Advance();
-      
+
+      if (isNegative)
+      {
+        Parser.Advance();
+      }
+
       switch (Parser.CurrentToken.Kind)
       {
         case SyntaxTokenKind.StringLiteral:
