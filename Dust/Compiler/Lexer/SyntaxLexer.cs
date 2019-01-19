@@ -267,9 +267,14 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
-      if (character != null && (character.Value == 'd' || character.Value == 'D'))
+      if (character != null && (character == 'd' || character == 'D'))
       {
         kind = SyntaxTokenKind.DoubleLiteral;
+      }
+
+      if (character != null && (character == 'f' || character != 'F'))
+      {
+        kind = SyntaxTokenKind.FloatLiteral;
       }
 
       string text = source.Range(startPosition, source.Position);
