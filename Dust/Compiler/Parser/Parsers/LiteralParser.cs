@@ -19,25 +19,25 @@ namespace Dust.Compiler.Parser.Parsers
       };
     }
 
-    private LiteralExpression<int> ParseInt()
+    private LiteralExpression<int> ParseInt(int multiplier)
     {
-      return new LiteralExpression<int>(int.Parse(Parser.CurrentToken.Text))
+      return new LiteralExpression<int>(int.Parse(Parser.CurrentToken.Text) * multiplier)
       {
         Range = Parser.CurrentToken.Range
       };
     }
 
-    private LiteralExpression<float> ParseFloat()
+    private LiteralExpression<float> ParseFloat(int multiplier)
     {
-      return new LiteralExpression<float>(float.Parse(Parser.CurrentToken.Text))
+      return new LiteralExpression<float>(float.Parse(Parser.CurrentToken.Text) * multiplier)
       {
         Range = Parser.CurrentToken.Range
       };
     }
 
-    private LiteralExpression<double> ParseDouble()
+    private LiteralExpression<double> ParseDouble(int multiplier)
     {
-      return new LiteralExpression<double>(double.Parse(Parser.CurrentToken.Text))
+      return new LiteralExpression<double>(double.Parse(Parser.CurrentToken.Text) * multiplier)
       {
         Range = Parser.CurrentToken.Range
       };
@@ -45,16 +45,22 @@ namespace Dust.Compiler.Parser.Parsers
 
     public Expression ParseLiteral()
     {
+      bool isNegative = Parser.CurrentToken.Is(SyntaxTokenKind.Minus);
+
+      int multiplier = isNegative ? -1 : 1;
+      
+      Parser.Advance();
+      
       switch (Parser.CurrentToken.Kind)
       {
         case SyntaxTokenKind.StringLiteral:
           return ParseString();
         case SyntaxTokenKind.IntLiteral:
-          return ParseInt();
+          return ParseInt(multiplier);
         case SyntaxTokenKind.FloatLiteral:
-          return ParseFloat();
+          return ParseFloat(multiplier);
         case SyntaxTokenKind.DoubleLiteral:
-          return ParseDouble();
+          return ParseDouble(multiplier);
         default:
           // TODO: This is not a literal, what do we do now?
 
