@@ -267,12 +267,12 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
-      if (character != null && (character == 'd' || character == 'D'))
+      if (character != null && (character.Value == 'd' || character.Value == 'D'))
       {
         kind = SyntaxTokenKind.DoubleLiteral;
       }
 
-      if (character != null && (character == 'f' || character != 'F'))
+      if (character != null && (character.Value == 'f' || character.Value == 'F'))
       {
         kind = SyntaxTokenKind.FloatLiteral;
       }
