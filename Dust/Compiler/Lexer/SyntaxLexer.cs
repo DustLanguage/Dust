@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -292,6 +292,8 @@ namespace Dust.Compiler.Lexer
 
       string text = source.Range(startPosition, source.Position + 1);
 
+      SourcePosition endPosition = source.SourcePosition;
+
       if (kind != null)
       {
         source.Advance();
@@ -300,7 +302,7 @@ namespace Dust.Compiler.Lexer
       return new SyntaxToken
       {
         Kind = kind ?? SyntaxTokenKind.IntLiteral,
-        Range = new SourceRange(source.GetSourcePosition(startPosition), source.SourcePosition),
+        Range = new SourceRange(source.GetSourcePosition(startPosition), endPosition),
         Text = text,
         Lexeme = text
       };
