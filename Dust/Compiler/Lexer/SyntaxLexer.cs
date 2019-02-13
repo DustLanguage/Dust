@@ -274,17 +274,28 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
-      if (character != null && (character.Value == 'd' || character.Value == 'D'))
+      char? next = source.Peek();
+
+      if (next.HasValue)
       {
-        kind = SyntaxTokenKind.DoubleLiteral;
+        char nextLower = char.ToLower(next.Value);
+
+        if (nextLower == 'd')
+        {
+          kind = SyntaxTokenKind.DoubleLiteral;
+        }
+        else if (nextLower == 'f')
+        {
+          kind = SyntaxTokenKind.FloatLiteral;
+        }
       }
 
-      if (character != null && (character.Value == 'f' || character.Value == 'F'))
-      {
-        kind = SyntaxTokenKind.FloatLiteral;
-      }
+      string text = source.Range(startPosition, source.Position + 1);
 
-      string text = source.Range(startPosition, source.Position);
+      if (kind != null)
+      {
+        source.Advance();
+      }
 
       return new SyntaxToken
       {
@@ -441,7 +452,7 @@ namespace Dust.Compiler.Lexer
 
     private static bool IsNumeric(char? character)
     {
-      return character != null && (char.IsDigit(character.Value) || character.Value == '.');
+      return character.HasValue && (char.IsDigit(character.Value) || character.Value == '.');
     }
   }
 }
