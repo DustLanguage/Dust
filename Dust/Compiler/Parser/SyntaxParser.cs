@@ -52,7 +52,7 @@ namespace Dust.Compiler.Parser
         module.Children.Add(statement);
       }
 
-      module.Range = new SourceRange(start, CurrentToken.Position);
+      module.Range = new SourceRange(start, CurrentToken.Range.End);
 
       return new SyntaxParseResult(module, diagnostics);
     }

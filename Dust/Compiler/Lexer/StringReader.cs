@@ -91,7 +91,7 @@ namespace Dust.Compiler.Lexer
       string text = Text.SubstringRange(0, position);
 
       int line = text.Count(character => character == '\n');
-      int column = Math.Max(position - (text.LastIndexOf('\n') == -1 ? 0 : text.LastIndexOf('\n') + 2), 0);
+      int column = Math.Max(position - (text.LastIndexOf('\n') == -1 ? 0 : text.LastIndexOf('\n') + 1), 0);
 
       return new SourcePosition(line, column);
     }

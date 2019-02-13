@@ -242,7 +242,7 @@ namespace Dust.Compiler.Lexer
 
       SyntaxTokenKind? kind = null;
 
-      while (character != null && (char.IsDigit(character.Value) || character.Value == '.'))
+      while (IsNumeric(character))
       {
         if (character.Value == '.')
         {
@@ -256,7 +256,14 @@ namespace Dust.Compiler.Lexer
           kind = SyntaxTokenKind.FloatLiteral;
         }
 
-        character = source.Advance();
+        if (IsNumeric(source.Peek()))
+        {
+          character = source.Advance();
+        }
+        else
+        {
+          break;
+        }
       }
 
       if (invalidDot)
@@ -363,7 +370,7 @@ namespace Dust.Compiler.Lexer
       }
 
       string text = source.Range(startPosition + 1, source.Position);
-      SourcePosition endPosition = source.SourcePosition + 1;
+      SourcePosition endPosition = source.SourcePosition;
 
       if (text == "")
       {
@@ -430,6 +437,11 @@ namespace Dust.Compiler.Lexer
     private static bool IsStringTerminator(char character)
     {
       return character == '\'' || character == '"';
+    }
+
+    private static bool IsNumeric(char? character)
+    {
+      return character != null && (char.IsDigit(character.Value) || character.Value == '.');
     }
   }
 }
