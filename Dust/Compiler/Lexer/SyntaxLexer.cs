@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Dust.Compiler.Lexer
 {
@@ -10,7 +10,7 @@ namespace Dust.Compiler.Lexer
 
     public List<SyntaxToken> Lex(string text)
     {
-      Debug.Assert(text != null);
+      Regex.Replace(text, "(\r\n|\r|\n)", "\n");
 
       source = new StringReader(text);
 
@@ -21,29 +21,22 @@ namespace Dust.Compiler.Lexer
         return tokens;
       }
 
-      char? character = source.Text[0];
+      char character = source.Advance();
 
-      while (true)
+      while (!source.IsAtEnd())
       {
-        if (source.Position + 1 <= source.Text.Length)
+        if (char.IsWhiteSpace(character))
         {
-          SyntaxToken syntaxToken = LexCharacter(character.Value);
-
-          character = source.Advance();
-
-          if (syntaxToken != null)
-          {
-            tokens.Add(syntaxToken);
-          }
-
-          if (character == null)
-          {
-            break;
-          }
+          continue;
         }
-        else
+
+        SyntaxToken syntaxToken = LexCharacter(character);
+
+        character = source.Advance();
+
+        if (syntaxToken != null)
         {
-          break;
+          tokens.Add(syntaxToken);
         }
       }
 
@@ -192,8 +185,11 @@ namespace Dust.Compiler.Lexer
 
           break;
         case '"':
+          token = LexStringLiteral(false);
+
+          break;
         case '\'':
-          token = LexStringLiteral();
+          token = LexStringLiteral(true);
 
           break;
         case '\n':
@@ -215,7 +211,18 @@ namespace Dust.Compiler.Lexer
             break;
           }
 
-          return null;
+          token = null;
+
+          break;
+      }
+
+      if (token == null)
+      {
+        return new SyntaxToken
+        {
+          Kind = SyntaxTokenKind.Invalid,
+          Range = new SourceRange(source.GetSourcePosition(start), source.SourcePosition)
+        };
       }
 
       if (token.Position == null)
@@ -225,7 +232,14 @@ namespace Dust.Compiler.Lexer
 
       if (token.Lexeme == null)
       {
-        token.Lexeme = source.Range(start, source.Position + 1);
+        string text = source.Range(start, source.Position + 1);
+
+        token.Lexeme = text;
+
+        if (token.Text == null)
+        {
+          token.Text = text;
+        }
       }
 
       return token;
@@ -233,22 +247,23 @@ namespace Dust.Compiler.Lexer
 
     private SyntaxToken LexNumericLiteral()
     {
-      char? character = source.Advance();
+      char character = source.Current;
 
-      int startPosition = source.Position - 1;
+      int startPosition = source.Position;
 
       bool dotFound = false;
-      bool invalidDot = false;
 
       SyntaxTokenKind? kind = null;
 
-      while (IsNumeric(character))
+      while (!source.IsAtEnd())
       {
-        if (character.Value == '.')
+        if (character == '.')
         {
           if (dotFound)
           {
-            invalidDot = true;
+            Console.WriteLine("invalid dot");
+
+            return null;
           }
 
           dotFound = true;
@@ -266,27 +281,25 @@ namespace Dust.Compiler.Lexer
         }
       }
 
-      if (invalidDot)
+      char next = source.Peek();
+
+      bool suffix = false;
+
+      if (next != default)
       {
-        // Syntax error
-        Console.WriteLine("invalid dot");
-
-        return null;
-      }
-
-      char? next = source.Peek();
-
-      if (next.HasValue)
-      {
-        char nextLower = char.ToLower(next.Value);
+        char nextLower = char.ToLower(next);
 
         if (nextLower == 'd')
         {
           kind = SyntaxTokenKind.DoubleLiteral;
+
+          suffix = true;
         }
         else if (nextLower == 'f')
         {
           kind = SyntaxTokenKind.FloatLiteral;
+
+          suffix = true;
         }
       }
 
@@ -294,7 +307,7 @@ namespace Dust.Compiler.Lexer
 
       SourcePosition endPosition = source.SourcePosition;
 
-      if (kind != null)
+      if (suffix)
       {
         source.Advance();
       }
@@ -304,77 +317,49 @@ namespace Dust.Compiler.Lexer
         Kind = kind ?? SyntaxTokenKind.IntLiteral,
         Range = new SourceRange(source.GetSourcePosition(startPosition), endPosition),
         Text = text,
-        Lexeme = text
+        Lexeme = source.Range(startPosition, source.Position + 1)
       };
     }
 
     private SyntaxToken LexIdentifierOrKeyword()
     {
-      char? character = source.Current;
+      char character = source.Current;
       SourcePosition start = source.SourcePosition;
 
-      bool invalidSymbol = false;
-
-      while (true)
+      while (!source.IsAtEnd() && IsValidIdentiferOrKeywordCharacter(character))
       {
-        if (character != null && IsValidIdentiferOrKeywordCharacter(character.Value))
-        {
-          character = source.Advance();
-        }
-        else if (character == ' ' || character == null || IsValidIdentiferOrKeywordCharacter(character.Value) == false)
-        {
-          break;
-        }
-        else if (IsValidIdentiferOrKeywordCharacter(character.Value) == false)
-        {
-          invalidSymbol = true;
-        }
-      }
-
-      if (invalidSymbol)
-      {
-        // Syntax error
-        Console.WriteLine("Invalid symbol in identifier.");
-
-        return null;
+        character = source.Advance();
       }
 
       string text = source.Range(start.Position, source.Position);
 
       SyntaxTokenKind? keywordKind = LexKeyword(text);
 
-      source.Revert();
-
       return new SyntaxToken
       {
         Kind = keywordKind ?? SyntaxTokenKind.Identifier,
         Range = new SourceRange(start, source.SourcePosition),
-        Text = text
+        Text = text,
+        Lexeme = text
       };
     }
 
-    private SyntaxToken LexStringLiteral()
+    private SyntaxToken LexStringLiteral(bool singleQuote)
     {
-      char? character = source.Peek();
-      bool unterminated = false;
+      source.Advance();
+
+      char character = source.Current;
 
       SourcePosition startPosition = source.SourcePosition;
 
-      source.Advance();
+      char terminator = singleQuote ? '\'' : '"';
 
-      while (character != null && IsStringTerminator(character.Value) == false)
+      while (!source.IsAtEnd() && character != terminator)
       {
-        if (source.IsAtEnd())
-        {
-          unterminated = true;
-
-          break;
-        }
-
         character = source.Advance();
       }
 
-      if (unterminated)
+      if (source.IsAtEnd())
       {
         // syntax error
         Console.WriteLine("unterminated string literal");
@@ -382,15 +367,9 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
-      string text = source.Range(startPosition + 1, source.Position);
-      SourcePosition endPosition = source.SourcePosition;
+      string text = source.Range(startPosition, source.Position);
 
-      if (text == "")
-      {
-        endPosition = source.SourcePosition;
-      }
-
-      SourceRange range = new SourceRange(startPosition, endPosition);
+      SourceRange range = new SourceRange(startPosition, source.SourcePosition);
 
       return new SyntaxToken
       {
@@ -447,14 +426,9 @@ namespace Dust.Compiler.Lexer
       return char.IsLetterOrDigit(character) || character == '_';
     }
 
-    private static bool IsStringTerminator(char character)
+    private static bool IsNumeric(char character)
     {
-      return character == '\'' || character == '"';
-    }
-
-    private static bool IsNumeric(char? character)
-    {
-      return character.HasValue && (char.IsDigit(character.Value) || character.Value == '.');
+      return char.IsDigit(character) || character == '.';
     }
   }
 }

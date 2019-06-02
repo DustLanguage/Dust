@@ -11,22 +11,20 @@ namespace Dust.Compiler.Lexer
 
     public SourcePosition SourcePosition => GetSourcePosition(Position);
 
-    public char? Current => Text[Position];
+    public char Current => Text[Position];
     public string Text { get; }
-
-    private int rangeStartPosition;
 
     public StringReader(string text)
     {
-      Position = 0;
+      Position = -1;
       Text = text;
     }
 
-    public char? Peek()
+    public char Peek()
     {
       if (Position + 1 >= Text.Length)
       {
-        return null;
+        return default;
       }
 
       return Text[Position + 1];
@@ -37,13 +35,13 @@ namespace Dust.Compiler.Lexer
       return Text[Position - 1];
     }
 
-    public char? Advance()
+    public char Advance()
     {
       Position++;
 
       if (IsAtEnd())
       {
-        return null;
+        return default;
       }
 
       return Text[Position];
@@ -62,21 +60,6 @@ namespace Dust.Compiler.Lexer
     public string Range(SourceRange range)
     {
       return Range(range.Start.Position, range.End.Position);
-    }
-
-    public void StartRange(int position)
-    {
-      rangeStartPosition = position;
-    }
-
-    public void StartRange()
-    {
-      StartRange(Position);
-    }
-
-    public string GetRange()
-    {
-      return Range(rangeStartPosition, Position);
     }
 
     public void Revert()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.Parser;
@@ -11,6 +12,8 @@ namespace Dust.CLI
     {
       while (true)
       {
+        Console.Write("> ");
+
         string input = Console.ReadLine();
 
         if (input == "")
@@ -26,7 +29,14 @@ namespace Dust.CLI
         SyntaxLexer lexer = new SyntaxLexer();
         SyntaxParser parser = new SyntaxParser();
 
-        SyntaxParseResult result = parser.Parse(lexer.Lex(input));
+        List<SyntaxToken> tokens = lexer.Lex(input);
+
+        foreach (SyntaxToken token in tokens)
+        {
+          Console.WriteLine($"{token.Kind}: '{token.Text}' {token.Lexeme}");
+        }
+
+        SyntaxParseResult result = parser.Parse(tokens);
 
         foreach (Diagnostic diagnostic in result.Diagnostics)
         {
