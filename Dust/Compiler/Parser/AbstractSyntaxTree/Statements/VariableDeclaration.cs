@@ -2,14 +2,14 @@
 
 namespace Dust.Compiler.Parser.AbstractSyntaxTree
 {
-  public class VariableDeclaration : Node
+  public class VariableDeclaration : SyntaxNode
   {
     public bool IsMutable { get; }
     public string Name { get; }
     public DustType Type { get; }
-    public Node Initializer { get; }
+    public SyntaxNode Initializer { get; }
 
-    public VariableDeclaration(string name, bool isMutable, DustType type, Node initializer, SourceRange range)
+    public VariableDeclaration(string name, bool isMutable, DustType type, SyntaxNode initializer, SourceRange range)
     {
       Name = name;
       IsMutable = isMutable;

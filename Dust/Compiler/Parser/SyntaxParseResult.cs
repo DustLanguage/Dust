@@ -6,10 +6,10 @@ namespace Dust.Compiler.Parser
 {
   public class SyntaxParseResult
   {
-    public Node Node { get; }
+    public SyntaxNode Node { get; }
     public List<Diagnostic> Diagnostics { get; }
 
-    public SyntaxParseResult(Node node, List<Diagnostic> diagnostics)
+    public SyntaxParseResult(SyntaxNode node, List<Diagnostic> diagnostics)
     {
       Node = node;
       Diagnostics = diagnostics;

@@ -4,6 +4,6 @@ namespace Dust.Compiler
 {
   public interface IVisitor
   {
-    void Accept(Node node);
+    void Accept(SyntaxNode node);
   }
 }

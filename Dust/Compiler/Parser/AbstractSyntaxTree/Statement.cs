@@ -1,6 +1,6 @@
 namespace Dust.Compiler.Parser.AbstractSyntaxTree
 {
-  public abstract class Statement : Node
+  public abstract class Statement : SyntaxNode
   {
   }
 }

@@ -8,7 +8,7 @@ namespace Dust.Compiler.Parser.AbstractSyntaxTree
     public string Name { get; }
     public List<AccessModifier> Modifiers { get; }
     public List<FunctionParameter> Parameters { get; }
-    public Node Body { get; }
+    public SyntaxNode Body { get; }
     public DustType ReturnType { get; }
 
     public FunctionDeclaration(string name, List<AccessModifier> modifiers, List<FunctionParameter> parameters, CodeBlockNode body, DustType returnType, SourceRange range)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
@@ -57,7 +57,7 @@ namespace Dust.Compiler.Parser
       return new SyntaxParseResult(module, diagnostics);
     }
 
-    private Node ParseDeclaration()
+    private SyntaxNode ParseDeclaration()
     {
       SourcePosition startPosition = null;
 
@@ -86,7 +86,7 @@ namespace Dust.Compiler.Parser
         return variableDeclarationParser.Parse(startPosition, false);
       }
 
-      Node node = ParseStatement();
+      SyntaxNode node = ParseStatement();
 
       if (node == null)
       {

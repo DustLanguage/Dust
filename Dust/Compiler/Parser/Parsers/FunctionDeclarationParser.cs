@@ -174,7 +174,7 @@ namespace Dust.Compiler.Parser.Parsers
               break;
             }
 
-            Node statement = Parser.ParseStatement();
+            SyntaxNode statement = Parser.ParseStatement();
 
             if (statement == null)
             {

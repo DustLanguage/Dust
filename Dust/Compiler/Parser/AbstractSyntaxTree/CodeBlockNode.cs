@@ -2,15 +2,15 @@
 
 namespace Dust.Compiler.Parser.AbstractSyntaxTree
 {
-  public class CodeBlockNode : Node 
+  public class CodeBlockNode : SyntaxNode 
   {
-    public List<Node> Children { get; }
+    public List<SyntaxNode> Children { get; }
 
     public CodeBlockNode(SourceRange range = null)
     {
       Range = range;
       
-      Children = new List<Node>();
+      Children = new List<SyntaxNode>();
     }
     
     public override void Visit(IVisitor visitor)
@@ -20,7 +20,7 @@ namespace Dust.Compiler.Parser.AbstractSyntaxTree
 
     public override void VisitChildren(IVisitor visitor)
     {
-      foreach (Node node in Children)
+      foreach (SyntaxNode node in Children)
       {
         node.Visit(visitor);
       }

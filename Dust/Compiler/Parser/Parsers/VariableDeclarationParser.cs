@@ -52,7 +52,7 @@ namespace Dust.Compiler.Parser.Parsers
 
       string name = Parser.PeekBack().Text;
 
-      Node initializer = null;
+      SyntaxNode initializer = null;
 
       if (Parser.MatchToken(SyntaxTokenKind.Equals))
       {

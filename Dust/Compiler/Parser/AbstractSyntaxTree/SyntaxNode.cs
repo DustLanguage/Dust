@@ -2,14 +2,14 @@
 
 namespace Dust.Compiler.Parser.AbstractSyntaxTree
 {
-  public abstract class Node : IEquatable<Node>
+  public abstract class SyntaxNode : IEquatable<SyntaxNode>
   {
     public SourceRange Range { get; set; }
 
     public abstract void Visit(IVisitor visitor);
     public abstract void VisitChildren(IVisitor visitor);
 
-    public bool Equals(Node other)
+    public bool Equals(SyntaxNode other)
     {
       if (ReferenceEquals(null, other)) return false;
       
@@ -21,7 +21,7 @@ namespace Dust.Compiler.Parser.AbstractSyntaxTree
       if (ReferenceEquals(null, obj)) return false;
       if (ReferenceEquals(this, obj)) return true;
       
-      return obj.GetType() == GetType() && Equals((Node) obj);
+      return obj.GetType() == GetType() && Equals((SyntaxNode) obj);
     }
 
     public override int GetHashCode()
