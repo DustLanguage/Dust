@@ -3,7 +3,7 @@ using System.Linq;
 using Dust.Compiler;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.Parser;
-using Dust.Compiler.Parser.AbstractSyntaxTree;
+using Dust.Compiler.Parser.SyntaxTree;
 using Dust.Compiler.Types;
 using Xunit;
 
@@ -18,13 +18,11 @@ namespace Dust.UnitTests.Parser
     {
       base.Setup(code);
 
-      List<SyntaxToken> tokens = lexer.Lex(code);
-
-      SyntaxToken openBrace = tokens.Find((token) => token.Kind == SyntaxTokenKind.OpenBrace);
+      SyntaxToken openBrace = tokens.Find((token) => token.Is(SyntaxTokenKind.OpenBrace));
 
       if (openBrace != null)
       {
-        bodyRange = new SourceRange(openBrace.Position, tokens.Find((token) => token.Kind == SyntaxTokenKind.CloseBrace).Position);
+        bodyRange = new SourceRange(openBrace.Position, tokens.Find((token) => token.Is(SyntaxTokenKind.CloseBrace)).Position);
       }
 
       modifiers = tokens.Select((token) =>
@@ -36,100 +34,100 @@ namespace Dust.UnitTests.Parser
     }
 
     [Theory]
-    [InlineData("fn function() {}")]
+    [InlineData("fn function() {}", true)]
     [InlineData("fn function()")]
     [InlineData("fn function")]
-    public void SimpleFunction(string code)
+    public void SimpleFunction(string code, bool hasBody = false)
     {
       Setup(code);
 
-      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function"));
+      Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode("function", hasBody: hasBody));
     }
 
     [Theory]
-    [InlineData("fn int function() {}")]
+    [InlineData("fn int function() {}", true)]
     [InlineData("fn int function()")]
     [InlineData("fn int function")]
-    public void SimpleFunctionWithReturnType(string code)
+    public void SimpleFunctionWithReturnType(string code, bool hasBody = false)
     {
       Setup(code);
 
-      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", returnType: DustTypes.Int));
+      Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode("function", returnType: DustTypes.Int, hasBody: hasBody));
     }
 
     [Theory]
-    [InlineData("public fn function() {}")]
+    [InlineData("public fn int function() {}", true)]
     [InlineData("private fn int function()")]
     [InlineData("static internal fn int function")]
-    public void SimpleFunctionWithAccessModifiers(string code)
+    public void SimpleFunctionWithAccessModifiers(string code, bool hasBody = false)
     {
       Setup(code);
 
-      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", returnType: DustTypes.Int));
+      Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode("function", returnType: DustTypes.Int, hasBody: hasBody));
     }
 
     [Theory]
-    [InlineData("fn function(int param1) {}")]
+    [InlineData("fn function(int param1) {}", true)]
     [InlineData("fn function(int param1)")]
-    public void FunctionWithOneParameter(string code)
+    public void FunctionWithOneParameter(string code, bool hasBody = false)
     {
       Setup(code);
 
-      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
+      Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
       {
-        new FunctionParameter("param1", null, true)
-      }));
+        new FunctionParameter("param1", DustTypes.Int, false)
+      }, hasBody: hasBody));
     }
 
     [Theory]
     // TODO: More parameters once Rider fixes this
-    [InlineData("fn function(mut int param1, string param2) {}")]
+    [InlineData("fn function(mut int param1, string param2) {}", true)]
     [InlineData("fn function(mut int param1, string param2)")]
-    public void FunctionWithMultipleParameters(string code)
+    public void FunctionWithMultipleParameters(string code, bool hasBody = false)
     {
       Setup(code);
 
-      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
+      Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
       {
-        new FunctionParameter("param1", null, true),
+        new FunctionParameter("param1", DustTypes.Int, true),
         new FunctionParameter("param2", null, false)
-      }));
+      }, hasBody: hasBody));
     }
 
     [Theory]
     // TODO: More parameters once Rider fixes this
-    [InlineData("fn int function(mut int param1, string param2) {}")]
+    [InlineData("fn int function(mut int param1, string param2) {}", true)]
     [InlineData("fn int function(mut int param1, string param2)")]
-    public void FunctionWithMultipleParametersAndReturnType(string code)
+    public void FunctionWithMultipleParametersAndReturnType(string code, bool hasBody = false)
     {
       Setup(code);
 
-      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
+      Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
       {
-        new FunctionParameter("param1", null, true),
+        new FunctionParameter("param1", DustTypes.Int, true),
         new FunctionParameter("param2", null, false)
-      }, DustTypes.Int));
+      }, DustTypes.Int, hasBody));
     }
 
     [Theory]
-    [InlineData("fn int function(mut int param1, string param2) {}")]
+    [InlineData("fn int function(mut int param1, string param2) {}", true)]
     [InlineData("fn int function(mut int param1, string param2)")]
-    public void FunctionWithMultipleParametersAndAccessModifiers(string code)
+    public void FunctionWithMultipleParametersAndAccessModifiers(string code, bool hasBody = false)
     {
       Setup(code);
 
-      Expect(Parse(code)).To.ParseSuccessfully().And.AbstractSyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
+      Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode("function", new List<FunctionParameter>
       {
-        new FunctionParameter("param1", null, true),
+        new FunctionParameter("param1", DustTypes.Int, true),
         new FunctionParameter("param2", null, false)
-      }, DustTypes.Int));
+      }, DustTypes.Int, hasBody));
     }
 
-    private CodeBlockNode CreateFunctionDeclarationNode(string functionName, List<FunctionParameter> parameters = null, DustType returnType = null)
+    private CodeBlockNode CreateFunctionDeclarationNode(string functionName, List<FunctionParameter> parameters = null, DustType returnType = null, bool hasBody = true)
     {
       if (parameters == null)
       {
-        parameters = Lists.Empty<FunctionParameter>();
+        parameters = new List<FunctionParameter>();
       }
 
       if (returnType == null)
@@ -137,7 +135,7 @@ namespace Dust.UnitTests.Parser
         returnType = DustTypes.Void;
       }
 
-      root.Children.Add(new FunctionDeclarationNode(functionName, modifiers, parameters, new CodeBlockNode(bodyRange), returnType, range));
+      root.Children.Add(new FunctionDeclaration(functionName, modifiers, parameters, hasBody ? new CodeBlockNode(bodyRange) : null, returnType, range));
 
       return root;
     }
