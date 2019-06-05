@@ -25,19 +25,14 @@ namespace Dust.Compiler.Lexer
 
       while (!source.IsAtEnd())
       {
-        if (char.IsWhiteSpace(character))
-        {
-          continue;
-        }
-
         SyntaxToken syntaxToken = LexCharacter(character);
-
-        character = source.Advance();
 
         if (syntaxToken != null)
         {
           tokens.Add(syntaxToken);
         }
+
+        character = source.Advance();
       }
 
       tokens.Add(new SyntaxToken
@@ -60,6 +55,8 @@ namespace Dust.Compiler.Lexer
 
       switch (character)
       {
+        case ' ':
+          return null;
         case '(':
           token.Kind = SyntaxTokenKind.OpenParenthesis;
 
@@ -326,12 +323,19 @@ namespace Dust.Compiler.Lexer
       char character = source.Current;
       SourcePosition start = source.SourcePosition;
 
-      while (!source.IsAtEnd() && IsValidIdentiferOrKeywordCharacter(character))
+      while (!source.IsAtEnd())
       {
-        character = source.Advance();
+        if (IsValidIdentiferOrKeywordCharacter(source.Peek()))
+        {
+          source.Advance();
+        }
+        else
+        {
+          break;
+        }
       }
 
-      string text = source.Range(start.Position, source.Position);
+      string text = source.Range(start.Position, source.Position + 1);
 
       SyntaxTokenKind? keywordKind = LexKeyword(text);
 

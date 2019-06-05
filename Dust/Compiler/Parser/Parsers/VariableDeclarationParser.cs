@@ -36,7 +36,7 @@ namespace Dust.Compiler.Parser.Parsers
       if (typeToken != null)
       {
         type = DustTypes.GetType(typeToken.Text);
-        
+
         if (type == null)
         {
           Parser.Error(Errors.UnknownType, typeToken, typeToken.Text);
