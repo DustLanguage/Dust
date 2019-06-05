@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
@@ -40,14 +40,16 @@ namespace Dust.Compiler.Parser
 
       SourcePosition start = CurrentToken.Position;
 
-      while (position < tokens.Count - 1)
+      while (CurrentToken.Isnt(SyntaxTokenKind.EndOfFile))
       {
-        Node statement = ParseDeclaration();
-
-        if (statement == null)
+        if (CurrentToken.Is(SyntaxTokenKind.Invalid))
         {
-          break;
+          Advance();
+
+          continue;
         }
+
+        SyntaxNode statement = ParseDeclaration();
 
         module.Children.Add(statement);
       }
