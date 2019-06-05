@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dust.Compiler.Parser.AbstractSyntaxTree
+namespace Dust.Compiler.Parser.SyntaxTree
 {
   public abstract class SyntaxNode : IEquatable<SyntaxNode>
   {

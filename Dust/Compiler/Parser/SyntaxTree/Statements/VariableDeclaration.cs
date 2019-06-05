@@ -1,6 +1,6 @@
 ﻿using Dust.Compiler.Types;
 
-namespace Dust.Compiler.Parser.AbstractSyntaxTree
+namespace Dust.Compiler.Parser.SyntaxTree
 {
   public class VariableDeclaration : SyntaxNode
   {

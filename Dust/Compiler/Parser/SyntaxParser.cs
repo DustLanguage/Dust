@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
-using Dust.Compiler.Parser.AbstractSyntaxTree;
+using Dust.Compiler.Parser.SyntaxTree;
 using Dust.Compiler.Parser.Parsers;
 
 namespace Dust.Compiler.Parser

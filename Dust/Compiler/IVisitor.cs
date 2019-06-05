@@ -1,4 +1,4 @@
-﻿using Dust.Compiler.Parser.AbstractSyntaxTree;
+﻿using Dust.Compiler.Parser.SyntaxTree;
 
 namespace Dust.Compiler
 {

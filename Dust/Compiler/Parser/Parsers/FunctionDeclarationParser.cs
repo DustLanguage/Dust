@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
-using Dust.Compiler.Parser.AbstractSyntaxTree;
+using Dust.Compiler.Parser.SyntaxTree;
 using Dust.Compiler.Types;
 using Dust.Extensions;
 

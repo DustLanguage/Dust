@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Dust.Compiler.Parser.AbstractSyntaxTree
+namespace Dust.Compiler.Parser.SyntaxTree
 {
   public class CodeBlockNode : SyntaxNode 
   {

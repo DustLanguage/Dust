@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
-using Dust.Compiler.Parser.AbstractSyntaxTree;
+using Dust.Compiler.Parser.SyntaxTree;
 
 namespace Dust.Compiler.Parser
 {

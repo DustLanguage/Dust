@@ -1,6 +1,6 @@
 using Dust.Compiler.Lexer;
-using Dust.Compiler.Parser.AbstractSyntaxTree;
-using Dust.Compiler.Parser.AbstractSyntaxTree.Expressions;
+using Dust.Compiler.Parser.SyntaxTree;
+using Dust.Compiler.Parser.SyntaxTree.Expressions;
 
 namespace Dust.Compiler.Parser.Parsers
 {

@@ -1,4 +1,4 @@
-namespace Dust.Compiler.Parser.AbstractSyntaxTree.Expressions
+namespace Dust.Compiler.Parser.SyntaxTree.Expressions
 {
   public class LiteralExpression<T> : Expression
   {
