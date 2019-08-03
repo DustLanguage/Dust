@@ -215,21 +215,21 @@ namespace Dust.Compiler.Lexer
 
       if (token == null)
       {
-        return new SyntaxToken
+        return new SyntaxToken(new SourceRange(source.GetSourcePosition(start), source.SourcePosition))
         {
-          Kind = SyntaxTokenKind.Invalid,
-          Range = new SourceRange(source.GetSourcePosition(start), source.SourcePosition)
+          Kind = SyntaxTokenKind.Invalid
         };
       }
 
       if (token.Position == null)
       {
-        token.Position = source.SourcePosition;
+        token.Position = source.GetSourcePosition(start);
       }
 
       if (token.Lexeme == null)
       {
-        string text = source.Range(start, source.Position + 1);
+        int offset = start == source.Position ? 1 : 0;
+        string text = source.Range(start, source.Position + offset);
 
         token.Lexeme = text;
 
@@ -246,7 +246,7 @@ namespace Dust.Compiler.Lexer
     {
       char character = source.Current;
 
-      int startPosition = source.Position;
+      SourcePosition startPosition = source.SourcePosition;
 
       bool dotFound = false;
 
@@ -300,9 +300,9 @@ namespace Dust.Compiler.Lexer
         }
       }
 
-      string text = source.Range(startPosition, source.Position + 1);
+      source.Advance();
 
-      SourcePosition endPosition = source.SourcePosition;
+      string text = source.Range(startPosition, source.Position);
 
       if (suffix)
       {
@@ -312,15 +312,13 @@ namespace Dust.Compiler.Lexer
       return new SyntaxToken
       {
         Kind = kind ?? SyntaxTokenKind.IntLiteral,
-        Range = new SourceRange(source.GetSourcePosition(startPosition), endPosition),
-        Text = text,
-        Lexeme = source.Range(startPosition, source.Position + 1)
+        Position = startPosition,
+        Text = text
       };
     }
 
     private SyntaxToken LexIdentifierOrKeyword()
     {
-      char character = source.Current;
       SourcePosition start = source.SourcePosition;
 
       while (!source.IsAtEnd())
@@ -342,7 +340,7 @@ namespace Dust.Compiler.Lexer
       return new SyntaxToken
       {
         Kind = keywordKind ?? SyntaxTokenKind.Identifier,
-        Range = new SourceRange(start, source.SourcePosition),
+        Position = start,
         Text = text,
         Lexeme = text
       };
@@ -350,11 +348,11 @@ namespace Dust.Compiler.Lexer
 
     private SyntaxToken LexStringLiteral(bool singleQuote)
     {
+      SourcePosition startPosition = source.SourcePosition;
+
       source.Advance();
 
       char character = source.Current;
-
-      SourcePosition startPosition = source.SourcePosition;
 
       char terminator = singleQuote ? '\'' : '"';
 
@@ -371,16 +369,16 @@ namespace Dust.Compiler.Lexer
         return null;
       }
 
-      string text = source.Range(startPosition, source.Position);
+      source.Advance();
 
-      SourceRange range = new SourceRange(startPosition, source.SourcePosition);
+      string lexeme = source.Range(startPosition, source.Position);
 
       return new SyntaxToken
       {
         Kind = SyntaxTokenKind.StringLiteral,
         Position = startPosition,
-        Range = range,
-        Text = text
+        Text = lexeme.Substring(1, lexeme.Length - 2),
+        Lexeme = lexeme
       };
     }
 
