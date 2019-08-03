@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Dust.Compiler.Types;
 
 namespace Dust.Compiler.Parser.SyntaxTree
@@ -19,17 +19,6 @@ namespace Dust.Compiler.Parser.SyntaxTree
       Body = body;
       Range = range;
       ReturnType = returnType;
-    }
-
-    public override void Visit(IVisitor visitor)
-    {
-      visitor.Accept(this);
-
-      Body.Visit(visitor);
-    }
-
-    public override void VisitChildren(IVisitor visitor)
-    {
     }
   }
 }

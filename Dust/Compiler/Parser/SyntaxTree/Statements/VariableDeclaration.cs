@@ -1,4 +1,4 @@
-﻿using Dust.Compiler.Types;
+using Dust.Compiler.Types;
 
 namespace Dust.Compiler.Parser.SyntaxTree
 {
@@ -16,15 +16,6 @@ namespace Dust.Compiler.Parser.SyntaxTree
       Type = type;
       Initializer = initializer;
       Range = range;
-    }
-
-    public override void Visit(IVisitor visitor)
-    {
-      visitor.Accept(this);
-    }
-
-    public override void VisitChildren(IVisitor visitor)
-    {
     }
   }
 }

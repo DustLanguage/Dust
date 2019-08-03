@@ -7,15 +7,6 @@ namespace Dust.Compiler.Parser.SyntaxTree
     public ExpressionStatement(Expression expression)
     {
       Expression = expression;
-      Range = expression.Range;
-    }
-
-    public override void Visit(IVisitor visitor)
-    {
-    }
-
-    public override void VisitChildren(IVisitor visitor)
-    {
     }
   }
 }
