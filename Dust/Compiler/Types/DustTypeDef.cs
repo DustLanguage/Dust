@@ -12,6 +12,6 @@ namespace Dust.Compiler.Types
     public DustType(string typeName)
     {
       TypeName = typeName;
-    }    
+    }
   }
 }

@@ -24,7 +24,7 @@ namespace Dust.UnitTests.Parser
     protected virtual void Setup(string code)
     {
       range = SourceRange.FromText(code);
-      root = new CodeBlockNode(range);
+      root = new CodeBlockNode(range: range);
       tokens = lexer.Lex(code);
     }
 
@@ -54,7 +54,7 @@ namespace Dust.UnitTests.Parser
       {
         ComparisonResult comparisonResult = comparer.Compare(result.Node, node);
 
-        string[] differences = comparisonResult.Differences.Select((difference) => $"{difference.ExpectedName}.{difference.PropertyName} ({difference.Object1Value}) != {difference.ActualName}.{difference.PropertyName} ({(difference.Object2Value == "(null)" ? "null" : difference.Object2Value)})").ToArray();
+        string[] differences = comparisonResult.Differences.Select((difference) => $"{difference.ExpectedName}.{difference.PropertyName} ({difference.Object2Value}) != {difference.ActualName}.{difference.PropertyName} ({(difference.Object1)})").ToArray();
 
         Assert.True(comparisonResult.AreEqual, $"Syntax tree mismatch\n{string.Join("\n", differences.ToArray())}");
 

@@ -67,6 +67,11 @@ namespace Dust.Compiler
 
     public bool Equals(SourcePosition other)
     {
+      if ((object) other == null)
+      {
+        return false;
+      }
+
       return string.Equals(File, other.File) && Line == other.Line && Position == other.Position;
     }
 
