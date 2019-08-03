@@ -1,24 +1,25 @@
-using System.Collections.Generic;
-using Dust.Compiler.Types;
+﻿using System.Collections.Generic;
+using Dust.Compiler.Lexer;
 
 namespace Dust.Compiler.Parser.SyntaxTree
 {
   public class FunctionDeclaration : Statement
   {
-    public string Name { get; }
-    public List<AccessModifier> Modifiers { get; }
+    public SyntaxToken FnToken { get; }
+    public SyntaxToken NameToken { get; }
     public List<FunctionParameter> Parameters { get; }
-    public SyntaxNode Body { get; }
-    public DustType ReturnType { get; }
+    public SyntaxToken ClosingParenthesis { get; }
+    public SyntaxToken ReturnTypeToken { get; }
+    public CodeBlockNode Body { get; }
 
-    public FunctionDeclaration(string name, List<AccessModifier> modifiers, List<FunctionParameter> parameters, CodeBlockNode body, DustType returnType, SourceRange range)
+    public FunctionDeclaration(SyntaxToken fnToken, SyntaxToken nameToken, List<FunctionParameter> parameters, SyntaxToken closingParenthesis, CodeBlockNode body, SyntaxToken returnTypeToken)
     {
-      Name = name;
-      Modifiers = modifiers;
+      FnToken = fnToken;
+      NameToken = nameToken;
       Parameters = parameters;
+      ClosingParenthesis = closingParenthesis;
       Body = body;
-      Range = range;
-      ReturnType = returnType;
+      ReturnTypeToken = returnTypeToken;
     }
   }
 }

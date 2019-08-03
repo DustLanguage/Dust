@@ -1,16 +1,20 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Dust.Compiler.Lexer;
 
 namespace Dust.Compiler.Parser.SyntaxTree
 {
-  public class CodeBlockNode : SyntaxNode 
+  public sealed class CodeBlockNode : SyntaxNode
   {
+    public SyntaxToken OpeningBrace { get; }
+    public SyntaxToken ClosingBrace { get; set; }
+
     public List<SyntaxNode> Children { get; }
 
-    public CodeBlockNode(SourceRange range = null)
+    public CodeBlockNode(SyntaxToken openingBrace = null, SourceRange range = null)
     {
-      Range = range;
-      
+      OpeningBrace = openingBrace;
       Children = new List<SyntaxNode>();
+      Range = range;
     }
   }
 }

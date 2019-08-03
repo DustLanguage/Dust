@@ -1,21 +1,20 @@
-using Dust.Compiler.Types;
+﻿using Dust.Compiler.Lexer;
 
 namespace Dust.Compiler.Parser.SyntaxTree
 {
-  public class VariableDeclaration : SyntaxNode
+  public class VariableDeclaration : Statement
   {
+    public SyntaxToken NameToken { get; }
     public bool IsMutable { get; }
-    public string Name { get; }
-    public DustType Type { get; }
-    public SyntaxNode Initializer { get; }
+    public SyntaxToken TypeToken { get; }
+    public Expression Initializer { get; }
 
-    public VariableDeclaration(string name, bool isMutable, DustType type, SyntaxNode initializer, SourceRange range)
+    public VariableDeclaration(SyntaxToken nameToken, bool isMutable, SyntaxToken typeToken, Expression initializer)
     {
-      Name = name;
+      NameToken = nameToken;
       IsMutable = isMutable;
-      Type = type;
+      TypeToken = typeToken;
       Initializer = initializer;
-      Range = range;
     }
   }
 }
