@@ -2,7 +2,7 @@
 {
   public class Error : Diagnostic
   {
-    public Error(string message) : base(message, DiagnosticSeverity.Error)
+    public Error(string message, SourceRange range) : base(message, range, DiagnosticSeverity.Error)
     {
     }
   }
