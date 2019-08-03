@@ -34,7 +34,7 @@ namespace Dust.Compiler.Parser
 
     public override string ToString()
     {
-      return Token.Lexeme;
+      return Kind.ToString();
     }
   }
 }
