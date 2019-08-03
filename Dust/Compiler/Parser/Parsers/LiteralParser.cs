@@ -11,55 +11,43 @@ namespace Dust.Compiler.Parser.Parsers
     {
     }
 
-    private LiteralExpression<string> ParseString()
-    {
-      return new LiteralExpression<string>(Parser.CurrentToken.Text)
-      {
-        Range = Parser.CurrentToken.Range
-      };
-    }
-
-    private LiteralExpression<int> ParseInt()
-    {
-      return new LiteralExpression<int>(int.Parse(Parser.CurrentToken.Text))
-      {
-        Range = Parser.CurrentToken.Range
-      };
-    }
-
-    private LiteralExpression<float> ParseFloat()
-    {
-      return new LiteralExpression<float>(float.Parse(Parser.CurrentToken.Text))
-      {
-        Range = Parser.CurrentToken.Range
-      };
-    }
-
-    private LiteralExpression<double> ParseDouble()
-    {
-      return new LiteralExpression<double>(double.Parse(Parser.CurrentToken.Text))
-      {
-        Range = Parser.CurrentToken.Range
-      };
-    }
-
     public Expression ParseLiteral()
     {
-      switch (Parser.CurrentToken.Kind)
+      SyntaxToken token = Parser.CurrentToken;
+
+      switch (token.Kind)
       {
         case SyntaxTokenKind.StringLiteral:
-          return ParseString();
+          return ParseString(token);
         case SyntaxTokenKind.IntLiteral:
-          return ParseInt();
+          return ParseInt(token);
         case SyntaxTokenKind.FloatLiteral:
-          return ParseFloat();
+          return ParseFloat(token);
         case SyntaxTokenKind.DoubleLiteral:
-          return ParseDouble();
+          return ParseDouble(token);
         default:
-          // TODO: This is not a literal, what do we do now?
-
           return null;
       }
+    }
+
+    private static LiteralExpression<string> ParseString(SyntaxToken token)
+    {
+      return new LiteralExpression<string>(token, token.Text);
+    }
+
+    private static LiteralExpression<int> ParseInt(SyntaxToken token)
+    {
+      return new LiteralExpression<int>(token, int.Parse(token.Text));
+    }
+
+    private static LiteralExpression<float> ParseFloat(SyntaxToken token)
+    {
+      return new LiteralExpression<float>(token, float.Parse(token.Text));
+    }
+
+    private static LiteralExpression<double> ParseDouble(SyntaxToken token)
+    {
+      return new LiteralExpression<double>(token, double.Parse(token.Text));
     }
   }
 }
