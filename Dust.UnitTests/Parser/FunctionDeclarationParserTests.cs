@@ -9,6 +9,15 @@ namespace Dust.UnitTests.Parser
 {
   public class FunctionDeclarationParserTests : ParserTests
   {
+    private List<SyntaxToken> identifiers;
+
+    protected override void Setup(string code)
+    {
+      base.Setup(code);
+
+      identifiers = tokens.FindAll((token) => token.Is(SyntaxTokenKind.Identifier));
+    }
+
     [Theory]
     [InlineData("fn function() {}", true)]
     [InlineData("fn function()")]
@@ -17,8 +26,6 @@ namespace Dust.UnitTests.Parser
     public void SimpleFunction(string code, bool hasBody = false)
     {
       Setup(code);
-
-      List<SyntaxToken> identifiers = tokens.FindAll((token) => token.Is(SyntaxTokenKind.Identifier));
 
       Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode(identifiers.First(), hasBody: hasBody));
     }
@@ -32,8 +39,6 @@ namespace Dust.UnitTests.Parser
     {
       Setup(code);
 
-      List<SyntaxToken> identifiers = tokens.FindAll((token) => token.Is(SyntaxTokenKind.Identifier));
-
       Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode(identifiers.First(), null, identifiers.Last(), hasBody));
     }
 
@@ -43,8 +48,6 @@ namespace Dust.UnitTests.Parser
     public void FunctionWithOneParameter(string code, bool hasBody = false)
     {
       Setup(code);
-
-      List<SyntaxToken> identifiers = tokens.FindAll((token) => token.Is(SyntaxTokenKind.Identifier));
 
       Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode(identifiers.First(), new List<FunctionParameter>
       {
@@ -59,8 +62,6 @@ namespace Dust.UnitTests.Parser
     public void FunctionWithMultipleParameters(string code, bool hasBody = false)
     {
       Setup(code);
-
-      List<SyntaxToken> identifiers = tokens.FindAll((token) => token.Is(SyntaxTokenKind.Identifier));
 
       Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode(identifiers.First(), new List<FunctionParameter>
       {
@@ -78,9 +79,7 @@ namespace Dust.UnitTests.Parser
     {
       Setup(code);
 
-      List<SyntaxToken> identifiers = tokens.FindAll((token) => token.Is(SyntaxTokenKind.Identifier));
-
-      // TODO: Do this automagically      
+      // TODO: Do this automagically
       Expect(Parse()).To.ParseSuccessfully().And.SyntaxTreeOf(CreateFunctionDeclarationNode(identifiers.First(), new List<FunctionParameter>
       {
         new FunctionParameter(identifiers[1], identifiers[2], true),
