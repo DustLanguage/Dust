@@ -11,6 +11,7 @@
     CloseBracket,
     Dot,
     Comma,
+    Colon,
     Equals,
     Plus,
     PlusEquals,

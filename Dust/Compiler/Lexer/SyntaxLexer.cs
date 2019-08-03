@@ -85,6 +85,10 @@ namespace Dust.Compiler.Lexer
           token.Kind = SyntaxTokenKind.Dot;
 
           break;
+        case ':':
+          token.Kind = SyntaxTokenKind.Colon;
+
+          break;
         case ',':
           token.Kind = SyntaxTokenKind.Comma;
 
