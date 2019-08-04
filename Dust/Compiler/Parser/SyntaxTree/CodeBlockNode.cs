@@ -8,12 +8,12 @@ namespace Dust.Compiler.Parser.SyntaxTree
     public SyntaxToken OpeningBrace { get; }
     public SyntaxToken ClosingBrace { get; set; }
 
-    public List<SyntaxNode> Children { get; }
+    public List<Statement> Children { get; }
 
     public CodeBlockNode(SyntaxToken openingBrace = null, SourceRange range = null)
     {
       OpeningBrace = openingBrace;
-      Children = new List<SyntaxNode>();
+      Children = new List<Statement>();
       Range = range;
     }
   }

@@ -6,7 +6,8 @@ namespace Dust.Compiler.Parser.Parsers
 {
   public class BinaryExpressionParser : SyntaxParserExtension
   {
-    public BinaryExpressionParser(SyntaxParser parser) : base(parser)
+    public BinaryExpressionParser(SyntaxParser parser) 
+      : base(parser)
     {
     }
 
