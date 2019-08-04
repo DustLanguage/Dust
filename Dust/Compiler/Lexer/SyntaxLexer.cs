@@ -304,9 +304,7 @@ namespace Dust.Compiler.Lexer
         }
       }
 
-      source.Advance();
-
-      string text = source.Range(startPosition, source.Position);
+      string text = source.Range(startPosition, source.Position + 1);
 
       if (suffix)
       {
