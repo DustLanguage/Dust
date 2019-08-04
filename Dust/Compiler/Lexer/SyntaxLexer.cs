@@ -94,7 +94,16 @@ namespace Dust.Compiler.Lexer
 
           break;
         case '=':
-          token.Kind = SyntaxTokenKind.Equals;
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.EqualsEquals;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Equal;
 
           break;
         case '+':
@@ -155,12 +164,34 @@ namespace Dust.Compiler.Lexer
           {
             source.Advance();
 
+            if (source.Peek() == '=')
+            {
+              source.Advance();
+
+              token.Kind = SyntaxTokenKind.AsteriskAsteriskEquals;
+
+              break;
+            }
+
             token.Kind = SyntaxTokenKind.AsteriskAsterisk;
 
             break;
           }
 
           token.Kind = SyntaxTokenKind.Asterisk;
+
+          break;
+        case '%':
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.PercentEquals;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Percent;
 
           break;
         case '/':
@@ -183,6 +214,71 @@ namespace Dust.Compiler.Lexer
           }
 
           token.Kind = SyntaxTokenKind.Slash;
+
+          break;
+        case '!':
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.NotEqual;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Bang;
+
+          break;
+        case '&':
+          if (source.Peek() == '&')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.AmpersandAmpersand;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Ampersand;
+
+          break;
+        case '|':
+          if (source.Peek() == '|')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.PipePipe;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Pipe;
+
+          break;
+        case '>':
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.GreaterThanEqual;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.GreaterThan;
+
+          break;
+        case '<':
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.LessThanEqual;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.LessThan;
 
           break;
         case '"':
@@ -315,7 +411,8 @@ namespace Dust.Compiler.Lexer
       {
         Kind = kind ?? SyntaxTokenKind.IntLiteral,
         Position = startPosition,
-        Text = text
+        Text = text,
+        Lexeme = source.Range(startPosition, source.Position + 1)
       };
     }
 

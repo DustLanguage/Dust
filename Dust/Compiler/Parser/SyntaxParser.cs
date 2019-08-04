@@ -18,6 +18,7 @@ namespace Dust.Compiler.Parser
     private FunctionDeclarationParser functionDeclarationParser;
     private VariableDeclarationParser variableDeclarationParser;
     private LiteralParser literalParser;
+    private BinaryExpressionParser binaryExpressionParser;
 
     public SyntaxParseResult Parse(List<SyntaxToken> tokens)
     {
@@ -34,6 +35,7 @@ namespace Dust.Compiler.Parser
       functionDeclarationParser = new FunctionDeclarationParser(this);
       variableDeclarationParser = new VariableDeclarationParser(this);
       literalParser = new LiteralParser(this);
+      binaryExpressionParser = new BinaryExpressionParser(this);
 
       CodeBlockNode module = new CodeBlockNode();
 
@@ -46,11 +48,11 @@ namespace Dust.Compiler.Parser
           continue;
         }
 
-        Statement statement = ParseDeclaration();
+        Statement declaration = ParseDeclaration();
 
-        if (statement != null)
+        if (declaration != null)
         {
-          module.Children.Add(statement);
+          module.Children.Add(declaration);
         }
         else
         {
@@ -104,9 +106,17 @@ namespace Dust.Compiler.Parser
 
     public Expression ParseExpression()
     {
-      Expression expression = literalParser.ParseLiteral();
+      Expression expression = literalParser.TryParse();
 
-      Advance();
+      /*if (SyntaxFacts.IsUnaryOperator(CurrentToken))
+      {
+        expression = unaryExpressionParser.Parse();
+      }*/
+
+      if (SyntaxFacts.IsBinaryOperator(CurrentToken))
+      {
+        return binaryExpressionParser.Parse(expression);
+      }
 
       return expression;
     }

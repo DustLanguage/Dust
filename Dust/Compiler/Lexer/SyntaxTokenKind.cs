@@ -12,7 +12,10 @@
     Dot,
     Comma,
     Colon,
-    Equals,
+    Bang,
+    Equal,
+    NotEqual,
+    EqualsEquals,
     Plus,
     PlusEquals,
     PlusPlus,
@@ -22,9 +25,20 @@
     Asterisk,
     AsteriskEquals,
     AsteriskAsterisk,
+    AsteriskAsteriskEquals,
     Slash,
     SlashEquals,
     SlashSlash,
+    Percent,
+    PercentEquals,
+    Ampersand,
+    AmpersandAmpersand,
+    Pipe,
+    PipePipe,
+    GreaterThan,
+    GreaterThanEqual,
+    LessThan,
+    LessThanEqual,
 
     // Literals
     IntLiteral,
@@ -55,6 +69,6 @@
     EndOfLine,
     EndOfFile,
 
-    Invalid
+    Invalid,
   }
 }

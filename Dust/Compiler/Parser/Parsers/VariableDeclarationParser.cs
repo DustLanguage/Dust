@@ -17,7 +17,7 @@ namespace Dust.Compiler.Parser.Parsers
       SyntaxToken typeToken = Parser.ParseOptionalType();
       Expression initializer = null;
 
-      if (Parser.MatchToken(SyntaxTokenKind.Equals))
+      if (Parser.MatchToken(SyntaxTokenKind.Equal))
       {
         initializer = Parser.ParseExpression();
       }

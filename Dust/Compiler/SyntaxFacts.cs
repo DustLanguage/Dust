@@ -23,8 +23,8 @@ namespace Dust.Compiler
     public static bool IsBinaryOperator(SyntaxToken token)
     {
       return token.IsOr(SyntaxTokenKind.Plus, SyntaxTokenKind.PlusEquals, SyntaxTokenKind.Minus, SyntaxTokenKind.MinusEquals, SyntaxTokenKind.Asterisk,
-               SyntaxTokenKind.AsteriskEquals, SyntaxTokenKind.AsteriskAsterisk, SyntaxTokenKind.AsteriskAsteriskEquals, SyntaxTokenKind.Percent,
-               SyntaxTokenKind.PercentEquals) || IsBooleanOperator(token);
+               SyntaxTokenKind.AsteriskEquals, SyntaxTokenKind.Slash, SyntaxTokenKind.SlashEquals, SyntaxTokenKind.AsteriskAsterisk, SyntaxTokenKind.AsteriskAsteriskEquals,
+               SyntaxTokenKind.Percent, SyntaxTokenKind.PercentEquals) || IsBooleanOperator(token);
     }
 
     public static bool IsBooleanOperator(SyntaxToken token)
