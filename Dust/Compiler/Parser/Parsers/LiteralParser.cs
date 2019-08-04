@@ -11,9 +11,11 @@ namespace Dust.Compiler.Parser.Parsers
     {
     }
 
-    public Expression ParseLiteral()
+    public Expression TryParse()
     {
       SyntaxToken token = Parser.CurrentToken;
+
+      Parser.Advance();
 
       switch (token.Kind)
       {
@@ -26,6 +28,8 @@ namespace Dust.Compiler.Parser.Parsers
         case SyntaxTokenKind.DoubleLiteral:
           return ParseDouble(token);
         default:
+          Parser.Revert();
+
           return null;
       }
     }
