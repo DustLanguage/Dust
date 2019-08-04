@@ -75,7 +75,7 @@ namespace Dust.UnitTests.Parser
 
     private static Expression CreateLiteralExpression(SyntaxToken token, object value)
     {
-      Expression expression = (Expression) Activator.CreateInstance(typeof(LiteralExpression<>).MakeGenericType(value.GetType()), token, value);
+      Expression expression = (Expression) Activator.CreateInstance(typeof(LiteralExpression), token, value);
 
       return expression;
     }

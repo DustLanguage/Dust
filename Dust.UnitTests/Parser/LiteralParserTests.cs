@@ -34,7 +34,7 @@ namespace Dust.UnitTests.Parser
     
     private CodeBlockNode CreateLiteralExpression(SyntaxToken token, object value)
     {
-      Expression expression = (Expression) Activator.CreateInstance(typeof(LiteralExpression<>).MakeGenericType(value.GetType()), token, value);
+      Expression expression = (Expression) Activator.CreateInstance(typeof(LiteralExpression), token, value);
 
       root.Children.Add(new ExpressionStatement(expression));
       

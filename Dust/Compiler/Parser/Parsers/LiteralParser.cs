@@ -20,38 +20,18 @@ namespace Dust.Compiler.Parser.Parsers
       switch (token.Kind)
       {
         case SyntaxTokenKind.StringLiteral:
-          return ParseString(token);
+          return new LiteralExpression(token, token.Text);
         case SyntaxTokenKind.IntLiteral:
-          return ParseInt(token);
+          return new LiteralExpression(token, int.Parse(token.Text));
         case SyntaxTokenKind.FloatLiteral:
-          return ParseFloat(token);
+          return new LiteralExpression(token, float.Parse(token.Text));
         case SyntaxTokenKind.DoubleLiteral:
-          return ParseDouble(token);
+          return new LiteralExpression(token, double.Parse(token.Text));
         default:
           Parser.Revert();
 
           return null;
       }
-    }
-
-    private static LiteralExpression<string> ParseString(SyntaxToken token)
-    {
-      return new LiteralExpression<string>(token, token.Text);
-    }
-
-    private static LiteralExpression<int> ParseInt(SyntaxToken token)
-    {
-      return new LiteralExpression<int>(token, int.Parse(token.Text));
-    }
-
-    private static LiteralExpression<float> ParseFloat(SyntaxToken token)
-    {
-      return new LiteralExpression<float>(token, float.Parse(token.Text));
-    }
-
-    private static LiteralExpression<double> ParseDouble(SyntaxToken token)
-    {
-      return new LiteralExpression<double>(token, double.Parse(token.Text));
     }
   }
 }
