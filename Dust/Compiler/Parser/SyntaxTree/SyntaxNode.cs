@@ -17,7 +17,9 @@ namespace Dust.Compiler.Parser.SyntaxTree
 
         SyntaxNode[] children = GetChildren().ToArray();
 
-        return new SourceRange(children.First().Range.Start, children.Last().Range.End);
+        range = new SourceRange(children.First().Range.Start, children.Last().Range.End);
+
+        return range;
       }
       protected set => range = value;
     }
