@@ -272,7 +272,7 @@ namespace Dust.Compiler.Lexer
           kind = SyntaxTokenKind.FloatLiteral;
         }
 
-        if (IsNumeric(source.Peek()))
+        if (SyntaxFacts.IsNumeric(source.Peek()))
         {
           character = source.Advance();
         }
@@ -325,7 +325,7 @@ namespace Dust.Compiler.Lexer
 
       while (!source.IsAtEnd())
       {
-        if (IsValidIdentiferOrKeywordCharacter(source.Peek()))
+        if (SyntaxFacts.IsValidIdentiferOrKeywordCharacter(source.Peek()))
         {
           source.Advance();
         }
@@ -423,16 +423,6 @@ namespace Dust.Compiler.Lexer
         default:
           return null;
       }
-    }
-
-    private static bool IsValidIdentiferOrKeywordCharacter(char character)
-    {
-      return char.IsLetterOrDigit(character) || character == '_';
-    }
-
-    private static bool IsNumeric(char character)
-    {
-      return char.IsDigit(character) || character == '.';
     }
   }
 }
