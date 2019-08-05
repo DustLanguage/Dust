@@ -1,5 +1,5 @@
 langauge: csharp
-dotnet: latest
+dotnet: 2.2.401
 
 solution: Dust.sln
 
