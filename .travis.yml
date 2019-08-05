@@ -1,6 +1,11 @@
 langauge: csharp
 dotnet: 2.2.6
+
 solution: Dust.sln
-script:
+
+install:
   - dotnet restore
+
+script:
+  - dotnet build
   - dotnet test
