@@ -1,9 +1,7 @@
 langauge: csharp
 dist: trusty
 mono: none
-dotnet: 2.2.401
-
-solution: Dust.sln
+dotnet: 2.1.2
 
 install:
   - dotnet restore
