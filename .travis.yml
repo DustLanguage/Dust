@@ -1,6 +1,12 @@
-langauge: csharp
-dotnet: 2.2.6
+language: csharp
+mono: none
+dotnet: 2.2.401
+
 solution: Dust.sln
-script:
+
+install:
   - dotnet restore
+
+script:
+  - dotnet build
   - dotnet test
