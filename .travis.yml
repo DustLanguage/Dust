@@ -1,0 +1,6 @@
+langauge: csharp
+dotnet: 2.2.6
+solution: Dust.sln
+script:
+  - dotnet restore
+  - dotnet test
