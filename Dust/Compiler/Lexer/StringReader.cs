@@ -8,22 +8,23 @@ namespace Dust.Compiler.Lexer
   public class StringReader
   {
     public int Position { get; private set; }
-    public char? Current => Text[Position];
-    public string Text { get; }
 
-    private int rangeStartPosition;
+    public SourcePosition SourcePosition => GetSourcePosition(Position);
+
+    public char Current => Text[Position];
+    public string Text { get; }
 
     public StringReader(string text)
     {
-      Position = 0;
+      Position = -1;
       Text = text;
     }
 
-    public char? Peek()
+    public char Peek()
     {
       if (Position + 1 >= Text.Length)
       {
-        return null;
+        return default;
       }
 
       return Text[Position + 1];
@@ -34,13 +35,13 @@ namespace Dust.Compiler.Lexer
       return Text[Position - 1];
     }
 
-    public char? Advance()
+    public char Advance()
     {
       Position++;
 
       if (IsAtEnd())
       {
-        return null;
+        return default;
       }
 
       return Text[Position];
@@ -51,24 +52,14 @@ namespace Dust.Compiler.Lexer
       return Text.SubstringRange(start, end);
     }
 
+    public string Range(SourcePosition start, int end)
+    {
+      return Range(start.Position, end);
+    }
+
     public string Range(SourceRange range)
     {
       return Range(range.Start.Position, range.End.Position);
-    }
-
-    public void StartRange(int position)
-    {
-      rangeStartPosition = position;
-    }
-
-    public void StartRange()
-    {
-      StartRange(Position);
-    }
-
-    public string GetRange()
-    {
-      return Range(rangeStartPosition, Position);
     }
 
     public void Revert()
@@ -83,7 +74,7 @@ namespace Dust.Compiler.Lexer
       string text = Text.SubstringRange(0, position);
 
       int line = text.Count(character => character == '\n');
-      int column = Math.Max(position - (text.LastIndexOf('\n') == -1 ? 0 : text.LastIndexOf('\n') + 2), 0);
+      int column = Math.Max(position - (text.LastIndexOf('\n') == -1 ? 0 : text.LastIndexOf('\n') + 1), 0);
 
       return new SourcePosition(line, column);
     }

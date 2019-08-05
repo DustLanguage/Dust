@@ -23,15 +23,20 @@ namespace Dust.Compiler
     {
       if (ReferenceEquals(null, other)) return false;
       if (ReferenceEquals(this, other)) return true;
-      
+
       return Equals(Start, other.Start) && Equals(End, other.End);
+    }
+
+    public override string ToString()
+    {
+      return $"({Start} -> {End})";
     }
 
     public override bool Equals(object obj)
     {
       if (ReferenceEquals(null, obj)) return false;
       if (ReferenceEquals(this, obj)) return true;
-      
+
       return obj.GetType() == GetType() && Equals((SourceRange) obj);
     }
 

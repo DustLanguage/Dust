@@ -8,4 +8,12 @@
     Private,
     Static
   }
+
+  public static class AccessModifierKindExtensions
+  {
+    public static string ToString(AccessModifierKind kind)
+    {
+      return kind.ToString().ToLower();
+    }
+  }
 }

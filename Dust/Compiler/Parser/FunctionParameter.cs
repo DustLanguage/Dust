@@ -1,17 +1,17 @@
-﻿using Dust.Compiler.Types;
+﻿using Dust.Compiler.Lexer;
 
 namespace Dust.Compiler.Parser
 {
   public class FunctionParameter
   {
-    public string Name { get; }
-    public DustType Type { get; }
+    public SyntaxToken NameToken { get; }
+    public SyntaxToken TypeToken { get; }
     public bool IsMutable { get; }
 
-    public FunctionParameter(string name, DustType type, bool isMutable)
+    public FunctionParameter(SyntaxToken nameToken, SyntaxToken typeToken, bool isMutable)
     {
-      Name = name;
-      Type = type;
+      NameToken = nameToken;
+      TypeToken = typeToken;
       IsMutable = isMutable;
     }
   }

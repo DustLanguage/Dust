@@ -1,9 +1,10 @@
+using System.Collections.Generic;
 using System.Linq;
 using Dust.Compiler;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.Parser;
-using Dust.Compiler.Parser.AbstractSyntaxTree;
+using Dust.Compiler.Parser.SyntaxTree;
 using JetBrains.Annotations;
 using KellermanSoftware.CompareNetObjects;
 using Xunit;
@@ -14,19 +15,22 @@ namespace Dust.UnitTests.Parser
   {
     protected CodeBlockNode root;
     protected SourceRange range;
+    protected List<SyntaxToken> tokens;
 
-    protected static readonly SyntaxLexer lexer = new SyntaxLexer();
-    private static readonly SyntaxParser parser = new SyntaxParser();
+    private readonly SyntaxLexer lexer = new SyntaxLexer();
+    private readonly SyntaxParser parser = new SyntaxParser();
+    private static readonly CompareLogic comparer = new CompareLogic();
 
     protected virtual void Setup(string code)
     {
       range = SourceRange.FromText(code);
-      root = new CodeBlockNode(range);
+      root = new CodeBlockNode(range: range);
+      tokens = lexer.Lex(code);
     }
 
-    protected static SyntaxParseResult Parse(string code)
+    protected SyntaxParseResult Parse()
     {
-      return parser.Parse(lexer.Lex(code));
+      return parser.Parse(tokens);
     }
 
     [UsedImplicitly(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature)]
@@ -41,18 +45,18 @@ namespace Dust.UnitTests.Parser
 
       public ExpectFunctions ParseSuccessfully()
       {
-        Assert.True(result.Diagnostics.Any((diagnostic) => diagnostic.Severity == DiagnosticSeverity.Error) == false, $"failed to parse\n{string.Join('\n', result.Diagnostics)}");
+        Assert.True(result.Diagnostics.Any((diagnostic) => diagnostic.Severity == DiagnosticSeverity.Error) == false, $"Failed to parse\n{string.Join('\n', result.Diagnostics)}");
 
         return new ExpectFunctions(result);
       }
 
-      public ExpectFunctions AbstractSyntaxTreeOf(Node node)
+      public ExpectFunctions SyntaxTreeOf(SyntaxNode node)
       {
-        ComparisonResult comparisonResult = new CompareLogic().Compare(result.Node, node);
+        ComparisonResult comparisonResult = comparer.Compare(result.Node, node);
 
-        string[] differences = comparisonResult.Differences.Select((difference) => $"{difference.ExpectedName}.{difference.PropertyName} ({difference.Object1Value}) != {difference.ActualName}.{difference.PropertyName} ({(difference.Object2Value == "(null)" ? "null" : difference.Object2Value)})").ToArray();
+        string[] differences = comparisonResult.Differences.Select((difference) => $"{difference.ExpectedName}.{difference.PropertyName} ({difference.Object2Value}) != {difference.ActualName}.{difference.PropertyName} ({(difference.Object1)})").ToArray();
 
-        Assert.True(result.Node.Equals(node), $"syntax tree mismatch\n{string.Join("\n", differences.ToArray())}");
+        Assert.True(comparisonResult.AreEqual, $"Syntax tree mismatch\n{string.Join("\n", differences.ToArray())}");
 
         return new ExpectFunctions(result);
       }

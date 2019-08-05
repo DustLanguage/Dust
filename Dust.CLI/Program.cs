@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
+using Dust.Compiler.Interpreter;
 using Dust.Compiler.Lexer;
 using Dust.Compiler.Parser;
+using Dust.Compiler.Types;
 
 namespace Dust.CLI
 {
@@ -11,6 +14,8 @@ namespace Dust.CLI
     {
       while (true)
       {
+        Console.Write("> ");
+
         string input = Console.ReadLine();
 
         if (input == "")
@@ -25,13 +30,20 @@ namespace Dust.CLI
 
         SyntaxLexer lexer = new SyntaxLexer();
         SyntaxParser parser = new SyntaxParser();
+        Interpreter interpreter = new Interpreter();
 
-        SyntaxParseResult result = parser.Parse(lexer.Lex(input));
+        List<SyntaxToken> tokens = lexer.Lex(input);
+
+        SyntaxParseResult result = parser.Parse(tokens);
 
         foreach (Diagnostic diagnostic in result.Diagnostics)
         {
           Console.WriteLine($"{diagnostic.Severity}: {diagnostic.Message} at {diagnostic.Range.Start}");
         }
+
+        object value = interpreter.Interpret(result.Node);
+
+        Console.WriteLine($"{value} ({DustTypes.TypeOf(value)})");
       }
     }
   }

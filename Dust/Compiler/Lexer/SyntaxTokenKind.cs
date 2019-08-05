@@ -11,7 +11,11 @@
     CloseBracket,
     Dot,
     Comma,
-    Equals,
+    Colon,
+    Bang,
+    Equal,
+    NotEqual,
+    EqualsEquals,
     Plus,
     PlusEquals,
     PlusPlus,
@@ -21,12 +25,25 @@
     Asterisk,
     AsteriskEquals,
     AsteriskAsterisk,
+    AsteriskAsteriskEquals,
     Slash,
     SlashEquals,
     SlashSlash,
+    Percent,
+    PercentEquals,
+    Ampersand,
+    AmpersandAmpersand,
+    Pipe,
+    PipePipe,
+    GreaterThan,
+    GreaterThanEqual,
+    LessThan,
+    LessThanEqual,
 
     // Literals
-    NumericLiteral,
+    IntLiteral,
+    FloatLiteral,
+    DoubleLiteral,
     StringLiteral,
     Identifier,
 
@@ -52,6 +69,6 @@
     EndOfLine,
     EndOfFile,
 
-    Invalid
+    Invalid,
   }
 }

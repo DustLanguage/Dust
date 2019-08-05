@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Dust.Compiler.Lexer
 {
@@ -10,7 +10,7 @@ namespace Dust.Compiler.Lexer
 
     public List<SyntaxToken> Lex(string text)
     {
-      Debug.Assert(text != null);
+      Regex.Replace(text, "(\r\n|\r|\n)", "\n");
 
       source = new StringReader(text);
 
@@ -21,30 +21,18 @@ namespace Dust.Compiler.Lexer
         return tokens;
       }
 
-      char? character = source.Text[0];
+      char character = source.Advance();
 
-      while (true)
+      while (!source.IsAtEnd())
       {
-        if (source.Position + 1 <= source.Text.Length)
+        SyntaxToken syntaxToken = LexCharacter(character);
+
+        if (syntaxToken != null)
         {
-          SyntaxToken syntaxToken = LexCharacter(character.Value);
-
-          character = source.Advance();
-
-          if (syntaxToken != null)
-          {
-            tokens.Add(syntaxToken);
-          }
-
-          if (character == null)
-          {
-            break;
-          }
+          tokens.Add(syntaxToken);
         }
-        else
-        {
-          break;
-        }
+
+        character = source.Advance();
       }
 
       tokens.Add(new SyntaxToken
@@ -67,6 +55,8 @@ namespace Dust.Compiler.Lexer
 
       switch (character)
       {
+        case ' ':
+          return null;
         case '(':
           token.Kind = SyntaxTokenKind.OpenParenthesis;
 
@@ -95,12 +85,25 @@ namespace Dust.Compiler.Lexer
           token.Kind = SyntaxTokenKind.Dot;
 
           break;
+        case ':':
+          token.Kind = SyntaxTokenKind.Colon;
+
+          break;
         case ',':
           token.Kind = SyntaxTokenKind.Comma;
 
           break;
         case '=':
-          token.Kind = SyntaxTokenKind.Equals;
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.EqualsEquals;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Equal;
 
           break;
         case '+':
@@ -161,12 +164,34 @@ namespace Dust.Compiler.Lexer
           {
             source.Advance();
 
+            if (source.Peek() == '=')
+            {
+              source.Advance();
+
+              token.Kind = SyntaxTokenKind.AsteriskAsteriskEquals;
+
+              break;
+            }
+
             token.Kind = SyntaxTokenKind.AsteriskAsterisk;
 
             break;
           }
 
           token.Kind = SyntaxTokenKind.Asterisk;
+
+          break;
+        case '%':
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.PercentEquals;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Percent;
 
           break;
         case '/':
@@ -191,9 +216,77 @@ namespace Dust.Compiler.Lexer
           token.Kind = SyntaxTokenKind.Slash;
 
           break;
+        case '!':
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.NotEqual;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Bang;
+
+          break;
+        case '&':
+          if (source.Peek() == '&')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.AmpersandAmpersand;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Ampersand;
+
+          break;
+        case '|':
+          if (source.Peek() == '|')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.PipePipe;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.Pipe;
+
+          break;
+        case '>':
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.GreaterThanEqual;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.GreaterThan;
+
+          break;
+        case '<':
+          if (source.Peek() == '=')
+          {
+            source.Advance();
+
+            token.Kind = SyntaxTokenKind.LessThanEqual;
+
+            break;
+          }
+
+          token.Kind = SyntaxTokenKind.LessThan;
+
+          break;
         case '"':
+          token = LexStringLiteral(false);
+
+          break;
         case '\'':
-          token = LexStringLiteral();
+          token = LexStringLiteral(true);
 
           break;
         case '\n':
@@ -215,37 +308,59 @@ namespace Dust.Compiler.Lexer
             break;
           }
 
-          return null;
+          token = null;
+
+          break;
+      }
+
+      if (token == null)
+      {
+        return new SyntaxToken(new SourceRange(source.GetSourcePosition(start), source.SourcePosition))
+        {
+          Kind = SyntaxTokenKind.Invalid
+        };
       }
 
       if (token.Position == null)
       {
-        token.Position = source.GetSourcePosition(source.Position);
+        token.Position = source.GetSourcePosition(start);
       }
 
-      token.Lexeme = source.Range(start, source.Position + 1);
+      if (token.Lexeme == null)
+      {
+        int offset = start == source.Position ? 1 : 0;
+        string text = source.Range(start, source.Position + offset);
+
+        token.Lexeme = text;
+
+        if (token.Text == null)
+        {
+          token.Text = text;
+        }
+      }
 
       return token;
     }
 
     private SyntaxToken LexNumericLiteral()
     {
-      char? character = source.Peek();
+      char character = source.Current;
 
-      int startPosition = source.Position;
+      SourcePosition startPosition = source.SourcePosition;
 
       bool dotFound = false;
-      bool invalidDot = false;
 
       SyntaxTokenKind? kind = null;
 
-      while (character != null && (char.IsDigit(character.Value) || character.Value == '.'))
+      while (!source.IsAtEnd())
       {
-        if (character.Value == '.')
+        if (character == '.')
         {
           if (dotFound)
           {
-            invalidDot = true;
+            Console.WriteLine("invalid dot");
+
+            return null;
           }
 
           dotFound = true;
@@ -253,113 +368,116 @@ namespace Dust.Compiler.Lexer
           kind = SyntaxTokenKind.FloatLiteral;
         }
 
-        character = source.Advance();
+        if (SyntaxFacts.IsNumeric(source.Peek()))
+        {
+          character = source.Advance();
+        }
+        else
+        {
+          break;
+        }
       }
 
-      if (invalidDot)
-      {
-        // Syntax error
-        Console.WriteLine("invalid dot");
+      char next = source.Peek();
 
-        return null;
+      bool suffix = false;
+
+      if (next != default)
+      {
+        char nextLower = char.ToLower(next);
+
+        if (nextLower == 'd')
+        {
+          kind = SyntaxTokenKind.DoubleLiteral;
+
+          suffix = true;
+        }
+        else if (nextLower == 'f')
+        {
+          kind = SyntaxTokenKind.FloatLiteral;
+
+          suffix = true;
+        }
       }
 
-      if (character != null && (character.Value == 'd' || character.Value == 'D'))
+      string text = source.Range(startPosition, source.Position + 1);
+
+      if (suffix)
       {
-        kind = SyntaxTokenKind.DoubleLiteral;
+        source.Advance();
       }
 
       return new SyntaxToken
       {
         Kind = kind ?? SyntaxTokenKind.IntLiteral,
-        Range = new SourceRange(source.GetSourcePosition(startPosition), source.GetSourcePosition(source.Position - 1)),
-        Text = source.Range(startPosition, source.Position)
+        Position = startPosition,
+        Text = text,
+        Lexeme = source.Range(startPosition, source.Position + 1)
       };
     }
 
     private SyntaxToken LexIdentifierOrKeyword()
     {
-      char? character = source.Current;
-      SourcePosition start = source.GetSourcePosition(source.Position);
+      SourcePosition start = source.SourcePosition;
 
-      bool invalidSymbol = false;
-
-      source.StartRange();
-
-      while (true)
+      while (!source.IsAtEnd())
       {
-        if (character != null && IsValidIdentiferOrKeywordCharacter(character.Value))
+        if (SyntaxFacts.IsValidIdentiferOrKeywordCharacter(source.Peek()))
         {
-          character = source.Advance();
+          source.Advance();
         }
-        else if (character == ' ' || character == null || IsValidIdentiferOrKeywordCharacter(character.Value) == false)
+        else
         {
           break;
         }
-        else if (IsValidIdentiferOrKeywordCharacter(character.Value) == false)
-        {
-          invalidSymbol = true;
-        }
       }
 
-      if (invalidSymbol)
-      {
-        // Syntax error
-        Console.WriteLine("Invalid symbol in identifier.");
-
-        return null;
-      }
-
-      string text = source.GetRange();
+      string text = source.Range(start.Position, source.Position + 1);
 
       SyntaxTokenKind? keywordKind = LexKeyword(text);
-
-      source.Revert();
 
       return new SyntaxToken
       {
         Kind = keywordKind ?? SyntaxTokenKind.Identifier,
-        Range = new SourceRange(start, source.GetSourcePosition(source.Position)),
-        Text = text
+        Position = start,
+        Text = text,
+        Lexeme = text
       };
     }
 
-    private SyntaxToken LexStringLiteral()
+    private SyntaxToken LexStringLiteral(bool singleQuote)
     {
-      char? character = source.Peek();
-      bool unterminated = false;
+      SourcePosition startPosition = source.SourcePosition;
 
-      SourcePosition position = source.GetSourcePosition(source.Position);
+      source.Advance();
 
-      source.StartRange(source.Position + 1);
+      char character = source.Current;
 
-      while (character != null && IsStringTerminator(character.Value) == false)
+      char terminator = singleQuote ? '\'' : '"';
+
+      while (!source.IsAtEnd() && character != terminator)
       {
-        if (source.IsAtEnd())
-        {
-          unterminated = true;
-
-          break;
-        }
-
         character = source.Advance();
       }
 
-      if (unterminated)
+      if (source.IsAtEnd())
       {
-        // Syntax error
-        Console.WriteLine("unterminated string");
+        // syntax error
+        Console.WriteLine("unterminated string literal");
 
         return null;
       }
 
       source.Advance();
 
+      string lexeme = source.Range(startPosition, source.Position);
+
       return new SyntaxToken
       {
         Kind = SyntaxTokenKind.StringLiteral,
-        Position = position,
-        Text = source.GetRange()
+        Position = startPosition,
+        Text = lexeme.Substring(1, lexeme.Length - 2),
+        Lexeme = lexeme
       };
     }
 
@@ -402,16 +520,6 @@ namespace Dust.Compiler.Lexer
         default:
           return null;
       }
-    }
-
-    private static bool IsValidIdentiferOrKeywordCharacter(char character)
-    {
-      return char.IsLetterOrDigit(character) || character == '_';
-    }
-
-    private static bool IsStringTerminator(char character)
-    {
-      return character == '\'' || character == '"';
     }
   }
 }

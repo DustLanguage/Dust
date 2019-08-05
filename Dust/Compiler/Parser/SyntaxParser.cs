@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Lexer;
-using Dust.Compiler.Parser.AbstractSyntaxTree;
 using Dust.Compiler.Parser.Parsers;
+using Dust.Compiler.Parser.SyntaxTree;
 
 namespace Dust.Compiler.Parser
 {
@@ -18,123 +17,116 @@ namespace Dust.Compiler.Parser
 
     private FunctionDeclarationParser functionDeclarationParser;
     private VariableDeclarationParser variableDeclarationParser;
+    private LiteralParser literalParser;
+    private BinaryExpressionParser binaryExpressionParser;
 
     public SyntaxParseResult Parse(List<SyntaxToken> tokens)
     {
       this.tokens = tokens;
       position = 0;
-      diagnostics.Clear();
 
-      functionDeclarationParser = new FunctionDeclarationParser(this);
-      variableDeclarationParser = new VariableDeclarationParser(this);
+      diagnostics.Clear();
 
       if (tokens.Count == 0)
       {
         return null;
       }
 
+      functionDeclarationParser = new FunctionDeclarationParser(this);
+      variableDeclarationParser = new VariableDeclarationParser(this);
+      literalParser = new LiteralParser(this);
+      binaryExpressionParser = new BinaryExpressionParser(this);
+
       CodeBlockNode module = new CodeBlockNode();
 
-      SourcePosition start = CurrentToken.Position;
-
-      while (position < tokens.Count - 1)
+      while (CurrentToken.Isnt(SyntaxTokenKind.EndOfFile))
       {
-        Node statement = ParseDeclaration();
-
-        if (statement == null)
+        if (CurrentToken.Is(SyntaxTokenKind.Invalid))
         {
-          break;
+          Advance();
+
+          continue;
         }
 
-        module.Children.Add(statement);
-      }
+        Statement declaration = ParseDeclaration();
 
-      module.Range = new SourceRange(start, CurrentToken.Position);
+        if (declaration != null)
+        {
+          module.Children.Add(declaration);
+        }
+        else
+        {
+          Advance();
+        }
+      }
 
       return new SyntaxParseResult(module, diagnostics);
     }
 
-    private Node ParseDeclaration()
+    private Statement ParseDeclaration()
     {
-      SourcePosition startPosition = null;
-
-      while (IsAccessModifier())
+      if (CurrentToken.Is(SyntaxTokenKind.FnKeyword))
       {
-        if (startPosition == null)
-        {
-          startPosition = CurrentToken.Position;
-        }
-
-        Advance();
+        return functionDeclarationParser.Parse();
       }
 
-      if (startPosition == null)
+      if (CurrentToken.IsOr(SyntaxTokenKind.LetKeyword))
       {
-        startPosition = CurrentToken.Position;
+        return variableDeclarationParser.Parse(false);
       }
 
-      if (MatchToken(SyntaxTokenKind.FnKeyword, false))
+      if (CurrentToken.IsOr(SyntaxTokenKind.MutKeyword))
       {
-        return functionDeclarationParser.Parse(startPosition);
+        return variableDeclarationParser.Parse(true);
       }
 
-      if (MatchToken(SyntaxTokenKind.LetKeyword) || MatchToken(SyntaxTokenKind.MutKeyword))
+      Statement statement = ParseStatement();
+
+      if (statement == null)
       {
-        return variableDeclarationParser.Parse(startPosition, false);
+        Error(Errors.UnexpectedTokenGlobal(CurrentToken));
+
+        return null;
       }
 
-      Node node = ParseStatement();
-
-      if (node == null)
-      {
-        node = variableDeclarationParser.Parse(startPosition, true);
-
-        if (node == null)
-        {
-          Error(Errors.UnexpectedTokenGlobal, CurrentToken, CurrentToken.Lexeme);
-
-          return null;
-        }
-      }
-
-      return node;
+      return statement;
     }
 
-    public Node ParseStatement()
+    public Statement ParseStatement()
     {
+      Expression expression = ParseExpression();
+
+      if (expression != null)
+      {
+        return new ExpressionStatement(expression);
+      }
+
       return null;
     }
 
-    private bool IsAccessModifier(SyntaxToken token = null)
+    public Expression ParseExpression()
     {
-      token = token ?? CurrentToken;
+      Expression expression = literalParser.TryParse();
 
-      return token.IsOr(SyntaxTokenKind.PublicKeyword, SyntaxTokenKind.InternalKeyword, SyntaxTokenKind.ProtectedKeyword, SyntaxTokenKind.PrivateKeyword, SyntaxTokenKind.StaticKeyword);
-    }
-
-    public void Error(Error error, SyntaxToken token, string arg0 = null, string arg1 = null)
-    {
-      Error(error, token.Range, arg0, arg1);
-    }
-
-    public void Error(Error error, SourceRange range, string arg0 = null, string arg1 = null)
-    {
-      error.Range = range;
-
-      if (arg0 != null || arg1 != null)
+      /*if (SyntaxFacts.IsUnaryOperator(CurrentToken))
       {
-        error.Format(arg0, arg1);
+        expression = unaryExpressionParser.Parse();
+      }*/
+
+      if (SyntaxFacts.IsBinaryOperator(CurrentToken))
+      {
+        return binaryExpressionParser.Parse(expression);
       }
 
+      return expression;
+    }
+
+    public void Error(Error error)
+    {
       diagnostics.Add(error);
     }
 
-    public void ModifierError(Error error, AccessModifier modifier, string arg0 = null, string arg1 = null)
-    {
-      Error(error, modifier.Token, arg0, arg1);
-    }
-
-    public bool MatchToken(SyntaxTokenKind kind, bool advance = true, int offset = 0)
+    public bool MatchToken(SyntaxTokenKind kind, int offset = 0)
     {
       if (IsAtEnd() || CurrentToken.Is(SyntaxTokenKind.EndOfFile))
       {
@@ -146,24 +138,35 @@ namespace Dust.Compiler.Parser
         return false;
       }
 
-      bool match = tokens[position + offset].Is(kind);
-
-      if (match && advance)
+      if (CurrentToken.Is(kind))
       {
-        position++;
+        Advance();
+
+        return true;
       }
 
-      return match;
+      return false;
     }
 
-    public bool MatchNextToken(SyntaxTokenKind kind, bool advance = true)
+    public SyntaxToken ExpectToken(SyntaxTokenKind kind, int offset = 0)
     {
-      return MatchToken(kind, advance, 1);
+      bool match = MatchToken(kind, offset);
+
+      if (match == false)
+      {
+        Error(Errors.UnexpectedToken(CurrentToken, kind));
+
+        return SyntaxToken.Invalid;
+      }
+
+      return PeekBack();
     }
 
-    public void Advance()
+    public SyntaxToken Advance()
     {
       position++;
+
+      return tokens[position - 1];
     }
 
     public SyntaxToken Peek()
@@ -171,16 +174,11 @@ namespace Dust.Compiler.Parser
       return IsAtEnd() ? null : tokens[position + 1];
     }
 
-    public SyntaxToken PeekBack(int offset = 1, bool onlyCurrentLine = true)
+    public SyntaxToken PeekBack(int offset = 1)
     {
-      if (position == 0 || CurrentToken == SyntaxToken.Invalid)
+      if (position == 0)
       {
         return SyntaxToken.Invalid;
-      }
-
-      if (onlyCurrentLine)
-      {
-        return tokens[position - offset].Position.Line == CurrentToken.Position.Line ? tokens[position - offset] : SyntaxToken.Invalid;
       }
 
       return tokens[position - offset];
@@ -193,15 +191,17 @@ namespace Dust.Compiler.Parser
 
     public bool IsAtEnd()
     {
-      return position >= tokens.Count || CurrentToken.Is(SyntaxTokenKind.EndOfFile);
+      return CurrentToken.Is(SyntaxTokenKind.EndOfFile);
     }
 
-    public void ConsumeIf(Func<SyntaxToken, bool> condition)
+    public SyntaxToken ParseOptionalType()
     {
-      if (condition(CurrentToken))
+      if (MatchToken(SyntaxTokenKind.Colon))
       {
-        Advance();
+        return Advance();
       }
+
+      return null;
     }
   }
 }
