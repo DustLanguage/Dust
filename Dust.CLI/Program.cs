@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Interpreter;
 using Dust.Compiler.Lexer;
@@ -41,9 +42,9 @@ namespace Dust.CLI
           Console.WriteLine($"{diagnostic.Severity}: {diagnostic.Message} at {diagnostic.Range.Start}");
         }
 
-        object value = interpreter.Interpret(result.Node);
+        DustObject value = interpreter.Interpret(result.Node);
 
-        Console.WriteLine($"{value} ({DustTypes.TypeOf(value)})");
+        Console.WriteLine($"{value} ({value.TypeName})");
       }
     }
   }

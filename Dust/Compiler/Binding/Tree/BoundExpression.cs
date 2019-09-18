@@ -4,6 +4,7 @@ namespace Dust.Compiler.Binding.Tree
 {
   public abstract class BoundExpression : BoundNode
   {
-    public abstract DustType Type { get; }
+    public DustObject Value { get; protected set; }
+    public virtual DustType Type => Value;
   }
 }

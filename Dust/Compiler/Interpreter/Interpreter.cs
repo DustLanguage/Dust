@@ -1,15 +1,15 @@
-using System;
 using Dust.Compiler.Binding;
 using Dust.Compiler.Binding.Tree;
 using Dust.Compiler.Binding.Tree.Expressions;
 using Dust.Compiler.Parser;
 using Dust.Compiler.Parser.SyntaxTree;
+using Dust.Compiler.Types;
 
 namespace Dust.Compiler.Interpreter
 {
   public class Interpreter
   {
-    public object Interpret(CodeBlockNode root)
+    public DustObject Interpret(CodeBlockNode root)
     {
       BoundTree tree = new Binder().Bind(root);
 
@@ -19,7 +19,7 @@ namespace Dust.Compiler.Interpreter
       /*}*/
     }
 
-    private object EvaluateStatement(BoundStatement statement)
+    private DustObject EvaluateStatement(BoundStatement statement)
     {
       if (statement is BoundExpressionStatement expressionStatement)
       {
@@ -29,7 +29,7 @@ namespace Dust.Compiler.Interpreter
       return null;
     }
 
-    private object EvaluateExpression(BoundExpression expression)
+    private DustObject EvaluateExpression(BoundExpression expression)
     {
       if (expression is BoundBinaryExpression binaryExpression)
       {
@@ -44,67 +44,47 @@ namespace Dust.Compiler.Interpreter
       return null;
     }
 
-    private object EvaluateExpressionStatement(BoundExpressionStatement expressionStatement)
+    private DustObject EvaluateExpressionStatement(BoundExpressionStatement expressionStatement)
     {
       return EvaluateExpression(expressionStatement.Expression);
     }
 
-    private object EvaluateBinaryExpression(BoundBinaryExpression binaryExpression)
+    private DustObject EvaluateBinaryExpression(BoundBinaryExpression binaryExpression)
     {
-      object left = Convert.ChangeType(EvaluateExpression(binaryExpression.Left), binaryExpression.Type.ToNativeType());
-      object right = Convert.ChangeType(EvaluateExpression(binaryExpression.Right), binaryExpression.Type.ToNativeType());
+      DustObject left = EvaluateExpression(binaryExpression.Left);
+      DustObject right = EvaluateExpression(binaryExpression.Right);
+
+      /*
+       * int   + double   -> double
+       *   DoubleType.Add(int, double)  -> double
+       * double + int     -> double
+       *   DoubleType.Add(double, int)  -> double
+       * int   + string   -> string
+       *   StringType.Add(int, string)  -> string
+       * Left <op> Right  -> ReturnType
+       *   ReturnType.<op>(Left, Right) -> ReturnType
+       */
+
+
+/*      if (binaryExpression.Right.Type == binaryExpression.Type)
+      {
+        DustObject t = left;
+
+        left = right;
+        right = t;
+      }*/
 
       switch (binaryExpression.Operator.Kind)
       {
         case BinaryOperatorKind.Add:
-          if (left is double || right is double)
-          {
-            return (double) left + (double) right;
-          }
-
-          if (left is float || right is float)
-          {
-            return (float) left + (float) right;
-          }
-
-          return (int) left + (int) right;
+          return left.Add(right);
         case BinaryOperatorKind.Subtract:
-          if (left is double || right is double)
-          {
-            return (double) left - (double) right;
-          }
-
-          if (left is float || right is float)
-          {
-            return (float) left - (float) right;
-          }
-
-          return (int) left - (int) right;
+          return left.Subtract(right);
         case BinaryOperatorKind.Multiply:
-          if (left is double || right is double)
-          {
-            return (double) left * (double) right;
-          }
-
-          if (left is float || right is float)
-          {
-            return (float) left * (float) right;
-          }
-
-          return (int) left * (int) right;
+          return left.Multiply(right);
         case BinaryOperatorKind.Divide:
-          if (left is double || right is double)
-          {
-            return (double) left / (double) right;
-          }
-
-          if (left is float || right is float)
-          {
-            return (float) left / (float) right;
-          }
-
-          return (int) left / (int) right;
-        case BinaryOperatorKind.Modulo:
+          return left.Divide(right);
+        /*case BinaryOperatorKind.Modulo:
           if (left is double || right is double)
           {
             return (double) left % (double) right;
@@ -177,13 +157,13 @@ namespace Dust.Compiler.Interpreter
         case BinaryOperatorKind.LessThan:
           return Convert.ToDouble(left) < Convert.ToDouble(right);
         case BinaryOperatorKind.LessThanEqual:
-          return Convert.ToDouble(left) <= Convert.ToDouble(right);
+          return Convert.ToDouble(left) <= Convert.ToDouble(right);*/
         default:
           return null;
       }
     }
 
-    private object EvaluateLiteralExpression(BoundLiteralExpression literalExpression)
+    private DustObject EvaluateLiteralExpression(BoundLiteralExpression literalExpression)
     {
       return literalExpression.Value;
     }

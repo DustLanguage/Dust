@@ -55,7 +55,7 @@ namespace Dust.Compiler.Types
       if (ReferenceEquals(null, obj)) return false;
       if (ReferenceEquals(this, obj)) return true;
       if (obj.GetType() != GetType()) return false;
-      
+
       return Equals((DustType) obj);
     }
 
@@ -66,7 +66,7 @@ namespace Dust.Compiler.Types
         int hashCode = (TypeName != null ? TypeName.GetHashCode() : 0);
         hashCode = (hashCode * 397) ^ (SuperType != null ? SuperType.GetHashCode() : 0);
         hashCode = (hashCode * 397) ^ Rank;
-        
+
         return hashCode;
       }
     }
