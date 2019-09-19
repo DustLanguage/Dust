@@ -27,9 +27,15 @@ namespace Dust.Compiler.Binding
     private static readonly List<BoundBinaryOperator> binaryOperators = new List<BoundBinaryOperator>
     {
       new BoundBinaryOperator(BinaryOperatorKind.Add, DustTypes.Number),
+      new BoundBinaryOperator(BinaryOperatorKind.Add, DustTypes.String),
+      new BoundBinaryOperator(BinaryOperatorKind.Add, DustTypes.String, DustTypes.Number, DustTypes.String),
       new BoundBinaryOperator(BinaryOperatorKind.Subtract, DustTypes.Number),
+      new BoundBinaryOperator(BinaryOperatorKind.Subtract, DustTypes.String),
       new BoundBinaryOperator(BinaryOperatorKind.Divide, DustTypes.Number),
+      new BoundBinaryOperator(BinaryOperatorKind.Divide, DustTypes.String),
+      new BoundBinaryOperator(BinaryOperatorKind.Divide, DustTypes.String, DustTypes.Int, DustTypes.String),
       new BoundBinaryOperator(BinaryOperatorKind.Multiply, DustTypes.Number),
+      new BoundBinaryOperator(BinaryOperatorKind.Multiply, DustTypes.String, DustTypes.Int, DustTypes.String),
       new BoundBinaryOperator(BinaryOperatorKind.Modulo, DustTypes.Number),
       new BoundBinaryOperator(BinaryOperatorKind.Exponentiate, DustTypes.Number),
       new BoundBinaryOperator(BinaryOperatorKind.Equal, DustTypes.Bool),

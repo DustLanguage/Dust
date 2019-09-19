@@ -51,5 +51,11 @@ namespace Dust.Compiler.Types
       throw new Exception($"Cannot convert type {TypeName} to type double.");
       // return null;
     }
+
+    public virtual DustString ToString()
+    {
+      throw new Exception($"Cannot convert type {TypeName} to type string.");
+      // return null;
+    }
   }
 }
