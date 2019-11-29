@@ -38,7 +38,7 @@ namespace Dust.Compiler.Types
     {
       return new DustFloat(Value / other.ToFloat());
     }
-    
+
     public override DustInt ToInt()
     {
       return (int) Value;
@@ -59,11 +59,11 @@ namespace Dust.Compiler.Types
       return typeof(float);
     }
 
-    public override string ToString()
+    public override DustString ToString()
     {
       return Value.ToString(CultureInfo.InvariantCulture);
     }
-    
+
     public static implicit operator DustFloat(float value)
     {
       return new DustFloat(value);

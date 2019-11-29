@@ -10,6 +10,7 @@ namespace Dust.Compiler.Types
     public static DustType Float => new DustFloat();
     public static DustType Double => new DustDouble();
     public static DustType Number => new DustNumber();
+    public static DustType String => new DustString();
     public static DustType Bool => new DustBool();
 
     public static DustType TypeOf(object value)
@@ -62,6 +63,11 @@ namespace Dust.Compiler.Types
       if (value is bool boolValue)
       {
         return new DustBool(boolValue);
+      }
+
+      if (value is string stringValue)
+      {
+        return new DustString(stringValue);
       }
 
       throw new Exception($"{nameof(FromNative)} not implemented for `{value.GetType()}`");

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Dust.Compiler.Diagnostics;
 using Dust.Compiler.Interpreter;
 using Dust.Compiler.Lexer;
@@ -44,7 +43,7 @@ namespace Dust.CLI
 
         DustObject value = interpreter.Interpret(result.Node);
 
-        Console.WriteLine($"{value} ({value.TypeName})");
+        Console.WriteLine($"{value.ToString().Value} ({value.TypeName})");
       }
     }
   }

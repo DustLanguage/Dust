@@ -58,7 +58,7 @@ namespace Dust.Compiler.Types
       return typeof(int);
     }
 
-    public override string ToString()
+    public override DustString ToString()
     {
       return Value.ToString();
     }

@@ -25,11 +25,6 @@ namespace Dust.Compiler.Types
       return this == type || this == type.SuperType;
     }
 
-    public override string ToString()
-    {
-      return TypeName;
-    }
-
     public static bool operator ==(DustType left, DustType right)
     {
       if ((object) left == null && (object) right == null)

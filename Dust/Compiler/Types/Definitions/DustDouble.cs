@@ -59,7 +59,7 @@ namespace Dust.Compiler.Types
       return typeof(double);
     }
 
-    public override string ToString()
+    public override DustString ToString()
     {
       return Value.ToString(CultureInfo.InvariantCulture);
     }
