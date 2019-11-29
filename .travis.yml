@@ -1,6 +1,6 @@
 language: csharp
 mono: none
-dotnet: 2.2.401
+dotnet: 3.0.101
 
 solution: Dust.sln
 
@@ -8,5 +8,5 @@ install:
   - dotnet restore
 
 script:
-  - dotnet build
+  - dotnet build --configuration Release
   - dotnet test
