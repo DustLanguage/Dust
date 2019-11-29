@@ -10,18 +10,20 @@ namespace Dust.Compiler.Binding
     public DustType LeftType { get; }
     public DustType RightType { get; }
     public DustType ReturnType { get; }
+    public bool IsInterchangeable { get; }
 
     public BoundBinaryOperator(BinaryOperatorKind kind, DustType type)
       : this(kind, type, type, type)
     {
     }
 
-    public BoundBinaryOperator(BinaryOperatorKind kind, DustType leftType, DustType rightType, DustType returnType)
+    public BoundBinaryOperator(BinaryOperatorKind kind, DustType leftType, DustType rightType, DustType returnType, bool isInterchangeable = true)
     {
       Kind = kind;
       LeftType = leftType;
       RightType = rightType;
       ReturnType = returnType;
+      IsInterchangeable = isInterchangeable;
     }
 
     private static readonly List<BoundBinaryOperator> binaryOperators = new List<BoundBinaryOperator>
@@ -52,7 +54,23 @@ namespace Dust.Compiler.Binding
 
     public static BoundBinaryOperator Bind(DustType leftType, BinaryOperatorKind kind, DustType rightType)
     {
-      return binaryOperators.Find((@operator) => @operator.Kind == kind && @operator.LeftType.IsAssignableFrom(leftType) && @operator.RightType.IsAssignableFrom(rightType));
+      foreach (BoundBinaryOperator @operator in binaryOperators)
+      {
+        if (@operator.Kind == kind)
+        {
+          if (@operator.LeftType.IsAssignableFrom(leftType) && @operator.RightType.IsAssignableFrom(rightType))
+          {
+            return @operator;
+          }
+          
+          if (@operator.IsInterchangeable && @operator.LeftType.IsAssignableFrom(rightType) && @operator.RightType.IsAssignableFrom(leftType))
+          {
+            return @operator;
+          }
+        }
+      }
+      
+      return null;
     }
   }
 }

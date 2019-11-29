@@ -54,25 +54,12 @@ namespace Dust.Compiler.Interpreter
       DustObject left = EvaluateExpression(binaryExpression.Left);
       DustObject right = EvaluateExpression(binaryExpression.Right);
 
-      /*
-       * int   + double   -> double
-       *   DoubleType.Add(int, double)  -> double
-       * double + int     -> double
-       *   DoubleType.Add(double, int)  -> double
-       * int   + string   -> string
-       *   StringType.Add(int, string)  -> string
-       * Left <op> Right  -> ReturnType
-       *   ReturnType.<op>(Left, Right) -> ReturnType
-       */
+      BoundBinaryOperator @operator = binaryExpression.Operator;
 
-
-/*      if (binaryExpression.Right.Type == binaryExpression.Type)
+      if (@operator.IsInterchangeable && !left.IsAssignableFrom(@operator.LeftType))
       {
-        DustObject t = left;
-
-        left = right;
-        right = t;
-      }*/
+        (left, right) = (right, left);
+      }
 
       switch (binaryExpression.Operator.Kind)
       {
