@@ -17,8 +17,8 @@ namespace Dust.Compiler
 
     public static bool IsUnaryOperator(SyntaxToken token)
     {
-      return token.IsOr(SyntaxTokenKind.Plus, SyntaxTokenKind.Minus, SyntaxTokenKind.Bang, SyntaxTokenKind.PlusPlus, SyntaxTokenKind.MinusMinus, SyntaxTokenKind.AsteriskAsterisk,
-        SyntaxTokenKind.SlashSlash);
+      return token.IsOr(SyntaxTokenKind.Plus, SyntaxTokenKind.Minus, SyntaxTokenKind.Bang, SyntaxTokenKind.PlusPlus, SyntaxTokenKind.MinusMinus, 
+        SyntaxTokenKind.AsteriskAsterisk, SyntaxTokenKind.SlashSlash);
     }
 
     public static bool IsBinaryOperator(SyntaxToken token)
@@ -28,13 +28,14 @@ namespace Dust.Compiler
 
     public static bool IsBinaryArithmeticOperator(SyntaxToken token)
     {
-      return token.IsOr(SyntaxTokenKind.Plus, SyntaxTokenKind.Minus, SyntaxTokenKind.Asterisk, SyntaxTokenKind.Slash, SyntaxTokenKind.AsteriskAsterisk, SyntaxTokenKind.Percent);
+      return token.IsOr(SyntaxTokenKind.Plus, SyntaxTokenKind.Minus, SyntaxTokenKind.Asterisk, SyntaxTokenKind.Slash, SyntaxTokenKind.AsteriskAsterisk, 
+        SyntaxTokenKind.Percent);
     }
 
     public static bool IsBinaryBooleanOperator(SyntaxToken token)
     {
-      return token.IsOr(SyntaxTokenKind.EqualsEquals, SyntaxTokenKind.NotEqual, SyntaxTokenKind.AmpersandAmpersand, SyntaxTokenKind.PipePipe, SyntaxTokenKind.GreaterThan,
-        SyntaxTokenKind.GreaterThanEqual, SyntaxTokenKind.LessThan, SyntaxTokenKind.LessThanEqual);
+      return token.IsOr(SyntaxTokenKind.EqualsEquals, SyntaxTokenKind.NotEqual, SyntaxTokenKind.AmpersandAmpersand, SyntaxTokenKind.PipePipe, 
+        SyntaxTokenKind.GreaterThan, SyntaxTokenKind.GreaterThanEqual, SyntaxTokenKind.LessThan, SyntaxTokenKind.LessThanEqual);
     }
 
     public static bool IsAssignmentOperator(SyntaxToken token)

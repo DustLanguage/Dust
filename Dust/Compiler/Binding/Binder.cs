@@ -56,7 +56,7 @@ namespace Dust.Compiler.Binding
       BoundExpression left = BindExpression(binaryExpression.Left);
       BoundExpression right = BindExpression(binaryExpression.Right);
 
-      BinaryOperatorKind kind = SyntaxFacts.GetBinaryOperatorKind(binaryExpression.OperatorToken);
+      BinaryOperatorKind kind = (BinaryOperatorKind) binaryExpression.OperatorToken.Kind;
       BoundBinaryOperator @operator = BoundBinaryOperator.Bind(left.Type, kind, right.Type);
 
       if (@operator == null)
